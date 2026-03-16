@@ -1,0 +1,37 @@
+{
+  "name": "@socos/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "predev": "rm -fr .next",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint src/",
+    "type:check": "tsc --noEmit",
+    "test": "vitest",
+    "clean": "rm -rf .next node_modules .turbo"
+  },
+  "type": "module",
+  "dependencies": {
+    "@socos/shared": "workspace:*",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@socos/eslint-config": "workspace:*",
+    "@socos/typescript-config": "workspace:*",
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/node": "^22.19.5",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.0",
+    "eslint-config-next": "^15.5.12",
+    "postcss": "^8.5.8",
+    "prettier": "^3.8.1",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}
