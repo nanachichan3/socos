@@ -1,0 +1,324 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USER ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatar        String?
+  passwordHash  String?
+  xp            Int       @default(0)
+  level         Int       @default(1)
+  streakDays    Int       @default(0)
+  lastActiveAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  contacts      Contact[]
+  interactions  Interaction[]
+  reminders     Reminder[]
+  achievements  UserAchievement[]
+  vaults        Vault[]
+  sessions      Session[]
+}
+
+// ==================== VAULT ====================
+
+model Vault {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isShared    Boolean  @default(false)
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  contacts Contact[]
+}
+
+model VaultMember {
+  id        String   @id @default(cuid())
+  vaultId   String
+  vault     Vault    @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  userId    String
+  role      String   @default("member") // owner, admin, member
+  createdAt DateTime @default(now())
+
+  @@unique([vaultId, userId])
+}
+
+// ==================== CONTACT ====================
+
+model Contact {
+  id              String    @id @default(cuid())
+  vaultId         String
+  vault           Vault     @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  ownerId         String
+  owner           User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // Basic Info
+  firstName       String
+  lastName        String?
+  middleName      String?
+  nickname        String?
+  photo           String?
+  bio             String?
+
+  // Work
+  company         String?
+  jobTitle        String?
+
+  // Important Dates
+  birthday        DateTime?
+  anniversary     DateTime?
+
+  // Relationship Score (AI-calculated)
+  relationshipScore Int    @default(50) // 0-100
+
+  // Tags & Labels (JSON for flexibility)
+  labels          String[] @default([])
+  tags            String[] @default([])
+
+  // Social Links
+  socialLinks     Json?    // { linkedin, twitter, instagram, etc }
+
+  // Metadata
+  firstMetDate    DateTime?
+  firstMetContext String?
+  lastContactedAt DateTime?
+  nextReminderAt  DateTime?
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  interactions    Interaction[]
+  reminders       Reminder[]
+  contactFields   ContactField[]
+  tasks           Task[]
+  gifts           Gift[]
+  activities      Activity[]
+
+  // Indexes
+  @@index([vaultId])
+  @@index([ownerId])
+  @@index([lastContactedAt])
+  @@index([nextReminderAt])
+}
+
+// ==================== CONTACT FIELD ====================
+
+model ContactField {
+  id          String   @id @default(cuid())
+  contactId   String
+  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  type        String   // email, phone, address, website, etc
+  value       String
+  label       String?  // work, personal, etc
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([contactId])
+}
+
+// ==================== INTERACTION ====================
+
+model Interaction {
+  id          String    @id @default(cuid())
+  contactId   String
+  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  ownerId     String
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // Type
+  type        String    // call, message, meeting, note, email, social
+
+  // Content
+  title       String?
+  content     String?   // The actual note/content
+  summary     String?   // AI-generated summary
+
+  // Metadata
+  occurredAt  DateTime  @default(now())
+  duration    Int?      // in minutes, for calls/meetings
+  location    String?
+
+  // Gamification
+  xpEarned    Int       @default(10)
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([contactId])
+  @@index([ownerId])
+  @@index([occurredAt])
+}
+
+// ==================== REMINDER ====================
+
+model Reminder {
+  id            String    @id @default(cuid())
+  contactId     String
+  contact       Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  ownerId       String
+  owner         User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // Type
+  type          String    // birthday, followup, custom, anniversary
+
+  // Schedule
+  title         String
+  description   String?
+  scheduledAt   DateTime
+  completedAt   DateTime?
+
+  // Repeat
+  repeatInterval String?  // daily, weekly, monthly, yearly
+  isRecurring   Boolean   @default(false)
+
+  // Status
+  status        String    @default("pending") // pending, completed, skipped
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([contactId])
+  @@index([ownerId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+// ==================== TASK ====================
+
+model Task {
+  id          String    @id @default(cuid())
+  contactId   String?
+  contact     Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  ownerId     String
+
+  // Task Info
+  title       String
+  description String?
+  dueDate     DateTime?
+  priority    String    @default("medium") // low, medium, high
+  status      String    @default("pending") // pending, in_progress, completed
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  @@index([ownerId])
+  @@index([contactId])
+  @@index([status])
+}
+
+// ==================== GIFT ====================
+
+model Gift {
+  id          String    @id @default(cuid())
+  contactId   String
+  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  // Gift Info
+  name        String
+  description String?
+  price       Decimal?  @db.Decimal(10, 2)
+  url         String?
+  imageUrl    String?
+
+  // Status
+  status      String    @default("idea") // idea, purchased, given
+  givenAt     DateTime?
+
+  // Occasion
+  occasion    String?   // birthday, christmas, anniversary, etc
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([contactId])
+}
+
+// ==================== ACHIEVEMENTS ====================
+
+model Achievement {
+  id          String    @id @default(cuid())
+  code        String    @unique // e.g., "first_contact", "streak_master"
+  name        String
+  description String
+  icon        String?   // emoji or icon name
+  xpReward    Int       @default(100)
+  requirement Json      // { type: "count", target: 1, object: "contacts" }
+
+  // Relations
+  unlockedBy  UserAchievement[]
+
+  createdAt   DateTime  @default(now())
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  unlockedAt    DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+// ==================== ACTIVITIES (Life Events) ====================
+
+model Activity {
+  id          String    @id @default(cuid())
+  contactId   String?
+  contact     Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  ownerId     String
+
+  // Activity Info
+  title       String
+  description String?
+  date        DateTime
+
+  // Category
+  category    String    // birth, death, wedding, graduation, job_change, moved, etc
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([ownerId])
+  @@index([contactId])
+}
+
+// ==================== SESSIONS (Auth) ====================
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
