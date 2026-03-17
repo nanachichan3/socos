@@ -3,13 +3,15 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm turbo
+RUN npm install -g pnpm
 
-# Copy all files
-COPY . .
+# Copy package files
+COPY services/api/package.json services/api/pnpm-lock.yaml* ./
+COPY packages/ ./packages/
+COPY services/api/ ./services/api/
 
-# Install deps
-RUN pnpm install
+# Install dependencies
+RUN cd services/api && pnpm install --frozen-lockfile
 
 # Generate Prisma client
 RUN cd services/api && pnpm prisma generate
