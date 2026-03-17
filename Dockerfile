@@ -16,10 +16,6 @@ RUN pnpm install
 # Copy source including prisma
 COPY services/api/ ./services/api/
 
-# Skip prisma generate for now - use prisma client directly
-# Generate Prisma client
-RUN cd /app/services/api && npm install prisma --save-dev && npx prisma generate
-
 EXPOSE 3001
 
 CMD ["npx", "tsx", "services/api/src/server.ts"]
