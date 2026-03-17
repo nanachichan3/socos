@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3001:3001"
+      - "3002:3001"
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - PORT=3001
