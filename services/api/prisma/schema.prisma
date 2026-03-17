@@ -45,6 +45,7 @@ model Vault {
 
   // Relations
   contacts Contact[]
+  members  VaultMember[]
 }
 
 model VaultMember {
