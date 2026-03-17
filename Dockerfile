@@ -5,16 +5,14 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy package files
-COPY services/api/package.json services/api/pnpm-lock.yaml* ./
-COPY packages/ ./packages/
-COPY services/api/ ./services/api/
+# Copy all files
+COPY . .
 
-# Install dependencies
-RUN cd services/api && pnpm install --frozen-lockfile
-
-# Generate Prisma client
-RUN cd services/api && npx prisma generate
+# Install deps and setup
+RUN pnpm install && \
+    cd services/api && \
+    pnpm install && \
+    pnpm prisma generate
 
 EXPOSE 3001
 
