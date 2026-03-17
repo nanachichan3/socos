@@ -4,25 +4,15 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: services/api/Dockerfile
     ports:
       - "3001:3001"
     environment:
-      - DATABASE_URL=postgresql://socos:socos_pass_2026@host.docker.internal:5432/socos
+      - DATABASE_URL=${DATABASE_URL}
       - PORT=3001
-    depends_on:
-      - postgres
     restart: unless-stopped
-
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      - POSTGRES_USER=socos
-      - POSTGRES_PASSWORD=socos_pass_2026
-      - POSTGRES_DB=socos
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-
-volumes:
-  postgres_data:
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
