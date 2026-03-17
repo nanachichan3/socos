@@ -3,16 +3,16 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm turbo
 
 # Copy all files
 COPY . .
 
-# Install deps and setup
-RUN pnpm install && \
-    cd services/api && \
-    pnpm install && \
-    pnpm prisma generate
+# Install deps
+RUN pnpm install
+
+# Generate Prisma client
+RUN cd services/api && pnpm prisma generate
 
 EXPOSE 3001
 

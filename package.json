@@ -1,10 +1,16 @@
 {
   "name": "socos",
   "private": true,
+  "workspaces": [
+    "services/api",
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build",
-    "start:api": "cd services/api && pnpm exec tsx src/server.ts"
+    "build": "turbo run build"
   },
-  "packageManager": "pnpm@10.10.0"
+  "engines": {
+    "node": ">=22"
+  }
 }
