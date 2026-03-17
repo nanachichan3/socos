@@ -5,16 +5,18 @@ WORKDIR /app
 # Install pnpm globally
 RUN npm install -g pnpm
 
-# Copy just the api folder
-COPY services/api/package.json services/api/pnpm-lock.yaml* ./
+# Copy package files first for caching
+COPY services/api/package.json services/api/pnpm-lock.yaml ./
+
+# Install deps
+RUN cd services/api && pnpm install
+
+# Copy rest of files
 COPY services/api/ ./services/api/
 COPY packages/ ./packages/
 
-# Install deps
-RUN pnpm install
-
 # Generate Prisma client
-RUN npx prisma generate
+RUN cd services/api && pnpm prisma generate
 
 EXPOSE 3001
 
