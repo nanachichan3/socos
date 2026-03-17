@@ -13,11 +13,11 @@ COPY packages/ ./packages/
 # Install deps
 RUN pnpm install
 
-# Copy source
+# Copy source including prisma
 COPY services/api/ ./services/api/
 
-# Generate Prisma client
-RUN cd services/api && npx prisma generate
+# Generate Prisma client - use full path
+RUN cd /app/services/api && npx prisma generate
 
 EXPOSE 3001
 
