@@ -16,6 +16,15 @@ if (!databaseUrl) {
 app.use(cors());
 app.use(express.json());
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    service: 'SOCOS API', 
+    version: '0.1.0',
+    endpoints: ['/health', '/auth/login', '/auth/register', '/contacts']
+  });
+});
+
 // Simple in-memory JWT simulation
 const users = new Map<string, { id: string; token: string }>();
 
