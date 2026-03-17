@@ -7,6 +7,12 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
+// Use DATABASE_URL from environment (Coolify will set this)
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  console.warn('DATABASE_URL not set - using fallback');
+}
+
 app.use(cors());
 app.use(express.json());
 
