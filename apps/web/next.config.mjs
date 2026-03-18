@@ -12,6 +12,10 @@ const nextConfig = {
       },
       // React platform app
       {
+        source: '/platform',
+        destination: 'http://localhost:5173/platform/',
+      },
+      {
         source: '/platform/:path*',
         destination: 'http://localhost:5173/platform/:path*',
       },

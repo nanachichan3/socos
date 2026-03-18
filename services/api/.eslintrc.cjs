@@ -2,4 +2,5 @@
 module.exports = {
   root: true,
   extends: ["@socos/eslint-config/service.js"],
+  ignorePatterns: ["src/server.ts"],
 };
