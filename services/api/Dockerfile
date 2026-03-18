@@ -59,7 +59,7 @@ EXPOSE 3001
 
 ENV PORT=3001
 
-HEALTHCHECK --interval=30s --timeout=10s --retries=5 \
-  CMD wget -q --spider http://localhost:3001/health/check || exit 1
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 --start-period=10s \
+  CMD node -e "const http = require('http'); http.get('http://localhost:3001/health/check', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
 CMD ["node", "dist/main.js"]
