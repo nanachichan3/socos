@@ -1,43 +1,47 @@
 version: '3.8'
 
 services:
-  # Reverse proxy + Web app (Next.js handles routing)
+  # Next.js Web App with reverse proxy
   web:
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.web
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=/api
+      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL:-https://socos.rachkovan.com}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
     networks:
       - socos-network
 
   # NestJS API
   api:
     build:
-      context: ./services/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/api/Dockerfile
     ports:
-      - "3001:3000"
+      - "3002:3001"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@socos-db:5432/socos
-      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-me}
+      - PORT=3001
     networks:
       - socos-network
     depends_on:
       - db
 
-  # React Platform (folder named 'mobile' in repo)
+  # React Platform
   platform:
     build:
-      context: ./apps/mobile
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile.frontend
     ports:
       - "5173:5173"
     environment:
+      - NODE_ENV=production
       - VITE_API_URL=/api
     networks:
       - socos-network
@@ -49,7 +53,7 @@ services:
       - "5432:5432"
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_DB=socos
     volumes:
       - postgres-data:/var/lib/postgresql/data
