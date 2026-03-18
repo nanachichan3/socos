@@ -1,4 +1,4 @@
-import { getSharedMessage } from '@ts-monorepo-boilerplate/common';
+import { getSharedMessage } from '@socos/shared';
 
 function App() {
   const sharedMessage = getSharedMessage();

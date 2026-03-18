@@ -1,6 +1,7 @@
 {
   "name": "socos",
   "private": true,
+  "packageManager": "pnpm@10.10.0",
   "workspaces": [
     "services/api",
     "packages/*",
@@ -8,9 +9,16 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build"
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "type:check": "turbo run type:check",
+    "clean": "turbo run clean"
   },
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "turbo": "^2.8.17"
   }
 }

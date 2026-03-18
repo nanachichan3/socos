@@ -2,13 +2,13 @@
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@ts-monorepo-boilerplate/common'],
+  transpilePackages: ['@socos/shared'],
   async rewrites() {
     return [
       // Proxy /api/* to NestJS backend
       {
         source: '/api/:path*',
-        destination: 'http://socos-api:3000/:path*',
+        destination: 'http://localhost:3001/:path*',
       },
       // React platform (not mobile)
       {
