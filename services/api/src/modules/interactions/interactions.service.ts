@@ -29,7 +29,7 @@ export class InteractionsService {
         type: dto.type,
         title: dto.title,
         content: dto.content,
-        summary: dto.summary,
+        summary: (dto as any).summary,
         occurredAt: dto.occurredAt ? new Date(dto.occurredAt) : new Date(),
         duration: dto.duration,
         location: dto.location,
