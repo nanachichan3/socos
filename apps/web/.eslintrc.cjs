@@ -1,7 +1,7 @@
 /** @type {import("eslint").Linter.Config} */
 module.exports = {
   root: true,
-  extends: ['@ts-monorepo-boilerplate/eslint-config/next.js'],
+  extends: ['@socos/eslint-config/next.js'],
   /** A workaround to have the next.config use the mjs extension */
   overrides: [
     {

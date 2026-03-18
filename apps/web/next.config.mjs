@@ -1,19 +1,32 @@
 // @ts-check
 
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@ts-monorepo-boilerplate/common'],
+  output: 'standalone',
+  transpilePackages: ['@socos/shared'],
+  turbopack: {
+    root: resolve(__dirname, '../..'),
+  },
   async rewrites() {
+    const apiHost = process.env.API_INTERNAL_URL || 'http://localhost:3001'
+    const platformHost = process.env.PLATFORM_INTERNAL_URL || 'http://localhost:5173'
     return [
-      // Proxy /api/* to NestJS backend
       {
         source: '/api/:path*',
-        destination: 'http://socos-api:3000/:path*',
+        destination: `${apiHost}/:path*`,
       },
-      // React platform (not mobile)
+      {
+        source: '/platform',
+        destination: `${platformHost}/platform/`,
+      },
       {
         source: '/platform/:path*',
-        destination: 'http://socos-platform:5173/:path*',
+        destination: `${platformHost}/platform/:path*`,
       },
     ]
   },

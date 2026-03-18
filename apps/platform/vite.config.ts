@@ -8,12 +8,12 @@ export default defineConfig(({ mode }) => ({
     tailwindcss(),
     react(),
   ],
-  base: '/',
+  base: '/platform/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
       '~': path.resolve(__dirname, './src'),
-      '@ts-monorepo-boilerplate/common': path.resolve(__dirname, '../../packages/shared-package/src'),
+      '@socos/shared': path.resolve(__dirname, '../../packages/shared/src'),
     },
   },
   build: {
