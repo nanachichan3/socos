@@ -10,10 +10,10 @@ const nextConfig = {
         source: '/api/:path*',
         destination: 'http://localhost:3001/:path*',
       },
-      // React platform (not mobile)
+      // React platform app
       {
         source: '/platform/:path*',
-        destination: 'http://socos-platform:5173/:path*',
+        destination: 'http://localhost:5173/platform/:path*',
       },
     ]
   },

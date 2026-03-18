@@ -11,7 +11,7 @@ TypeScript monorepo (SOCOS — gamified personal CRM) using **pnpm 10.10.0** wor
 | Service | Port | Dev command (from root) |
 |---|---|---|
 | Next.js 16 app (Turbopack) | 3000 | `pnpm --filter @socos/web dev` |
-| React + Vite 8 app | 5173 | `pnpm --filter @socos/mobile dev` |
+| React + Vite 8 platform app | 5173 (or via `/platform/*` on port 3000) | `pnpm --filter @socos/platform dev` |
 | NestJS 11 backend | 3001 | See NestJS note below |
 
 ### Non-obvious gotchas
@@ -24,4 +24,5 @@ TypeScript monorepo (SOCOS — gamified personal CRM) using **pnpm 10.10.0** wor
 - **pnpm build scripts**: pnpm 10 blocks build scripts by default. After `pnpm install`, run `pnpm rebuild esbuild @nestjs/core unrs-resolver bcrypt prisma @prisma/client` to ensure platform-specific binaries are available.
 - **Tailwind CSS 4**: Uses CSS-first config (`@import "tailwindcss"` + `@theme` blocks in CSS). No `tailwind.config.ts` files. Next.js uses `@tailwindcss/postcss`, React app uses `@tailwindcss/vite`.
 - **No test files**: No `.spec.ts` or `.test.ts` files exist yet. The API's Jest config has `--passWithNoTests`. Vitest in other packages will exit with no tests found.
+- **Platform reverse proxy**: The Next.js app proxies `/platform/*` requests to the Vite dev server at `localhost:5173`. The Vite app's `base` is set to `/platform/` so assets resolve correctly. Both the Next.js web and platform Vite servers must be running for the proxy to work.
 - **`@vercel/style-guide` removed**: The archived package was replaced with `eslint-config-next` directly in the eslint-config package.

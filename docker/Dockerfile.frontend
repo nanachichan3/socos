@@ -21,7 +21,7 @@ ENV NODE_ENV=production
 RUN rm -rf node_modules
 RUN rm -rf pnpm-lock.yaml
 
-WORKDIR /app/apps/ts-monorepo-boilerplate-react
+WORKDIR /app/apps/platform
 
 # Install all dependencies including devDependencies
 RUN pnpm install --prod
