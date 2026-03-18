@@ -1,18 +1,64 @@
 version: '3.8'
 
 services:
-  api:
+  # Reverse proxy + Web app (Next.js handles routing)
+  web:
     build:
-      context: .
+      context: ./apps/web
       dockerfile: Dockerfile
     ports:
-      - "3002:3001"
+      - "3000:3000"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - PORT=3001
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=/api
+    networks:
+      - socos-network
+
+  # NestJS API
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@socos-db:5432/socos
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - socos-network
+    depends_on:
+      - db
+
+  # React Platform (folder named 'mobile' in repo)
+  platform:
+    build:
+      context: ./apps/mobile
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=/api
+    networks:
+      - socos-network
+
+  # Database
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=socos
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - socos-network
+
+networks:
+  socos-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
