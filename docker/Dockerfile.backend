@@ -22,11 +22,8 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/services/api/node_modules ./services/api/node_modules
-COPY --from=deps /app/packages ./packages
+COPY --from=deps /app/ ./
 
-COPY package.json pnpm-workspace.yaml ./
 COPY services/api/ services/api/
 COPY packages/ packages/
 
@@ -34,6 +31,12 @@ WORKDIR /app/services/api
 
 RUN pnpm prisma generate
 RUN pnpm build
+
+RUN pnpm --filter @socos/api deploy --prod --legacy /prod/api
+
+# Copy generated Prisma client into the deployed node_modules
+RUN cp -r /app/node_modules/.pnpm/@prisma+client*/node_modules/@prisma/client /prod/api/node_modules/@prisma/client
+RUN cp -r /app/node_modules/.pnpm/@prisma+client*/node_modules/.prisma /prod/api/node_modules/.prisma
 
 # ---- Stage 3: Production runner ----
 FROM node:22-alpine AS runner
@@ -45,11 +48,10 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nestjs && \
     adduser --system --uid 1001 nestjs
 
+COPY --from=builder /prod/api/node_modules ./node_modules
 COPY --from=builder /app/services/api/dist ./dist
-COPY --from=builder /app/services/api/package.json ./
-COPY --from=builder /app/services/api/node_modules ./node_modules
-COPY --from=builder /app/node_modules/.pnpm node_modules/.pnpm
 COPY --from=builder /app/services/api/prisma ./prisma
+COPY --from=builder /app/services/api/package.json ./
 
 USER nestjs
 
