@@ -1,18 +1,26 @@
-version: '3.8'
-
 services:
-  # Next.js Web App with reverse proxy
+  # Next.js Web App — reverse-proxies /api and /platform
   web:
     build:
       context: .
       dockerfile: docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
     ports:
-      - "3000:3000"
+      - "${WEB_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=/api
-      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL:-https://socos.rachkovan.com}
-      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
+      - API_INTERNAL_URL=http://api:3001
+      - PLATFORM_INTERNAL_URL=http://platform:8080
+    depends_on:
+      api:
+        condition: service_healthy
+      platform:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
     restart: unless-stopped
 
   # NestJS API
@@ -21,38 +29,53 @@ services:
       context: .
       dockerfile: services/api/Dockerfile
     ports:
-      - "3002:3001"
+      - "${API_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-me}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-socos}?schema=public
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - PORT=3001
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
     restart: unless-stopped
 
-  # React Platform
+  # React Platform — static SPA served by nginx
   platform:
     build:
       context: .
       dockerfile: docker/Dockerfile.frontend
-    ports:
-      - "5173:5173"
-    environment:
-      - NODE_ENV=production
-      - VITE_API_URL=/api
+      args:
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-}
+        VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-}
+    networks:
+      - frontend
     restart: unless-stopped
 
-  # Database
+  # PostgreSQL Database
   db:
     image: postgres:15-alpine
-    ports:
-      - "5432:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=socos
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - POSTGRES_DB=${POSTGRES_DB:-socos}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - backend
     restart: unless-stopped
 
 volumes:
   postgres-data:
+
+networks:
+  frontend:
+  backend:
