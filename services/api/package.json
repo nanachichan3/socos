@@ -52,7 +52,6 @@
     "@nestjs/testing": "^11.1.17",
     "@socos/eslint-config": "workspace:*",
     "@socos/typescript-config": "workspace:*",
-    ,
     "@types/express": "^5.0.6",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.19.5",
