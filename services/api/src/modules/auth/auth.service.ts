@@ -4,6 +4,17 @@ import { RegisterDto, LoginDto, AuthResponseDto, UpdateProfileDto } from './auth
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '../jwt/jwt.service.js';
 
+// Valid invite codes — separated by commas in INVITE_CODES env var
+// Default codes for initial access
+const DEFAULT_INVITE_CODES = ['socos-founding-2026', 'nanachi-beta'];
+
+function isValidInviteCode(code: string): boolean {
+  const validCodes = process.env.INVITE_CODES
+    ? process.env.INVITE_CODES.split(',').map(c => c.trim())
+    : DEFAULT_INVITE_CODES;
+  return validCodes.includes(code);
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -12,6 +23,11 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
+    // ── Invite-only check ─────────────────────────────────────────
+    if (!isValidInviteCode(dto.inviteCode)) {
+      throw new UnauthorizedException('Invalid or expired invite code. Request one from the account owner.');
+    }
+
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });

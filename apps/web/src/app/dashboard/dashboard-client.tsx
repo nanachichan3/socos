@@ -151,6 +151,7 @@ function AuthForm({ onLogin }: { onLogin: (token: string) => void }) {
   const [email, setEmail] = useState('yev.rachkovan@gmail.com');
   const [password, setPassword] = useState('socos2026');
   const [name, setName] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -159,8 +160,17 @@ function AuthForm({ onLogin }: { onLogin: (token: string) => void }) {
     setError('');
     setLoading(true);
     try {
-      const body = isLogin ? { email, password } : { email, password, name };
-      const res = await fetch('/api/auth/login', {
+      let body: Record<string, string>;
+      if (isLogin) {
+        body = { email, password };
+      } else {
+        if (!inviteCode.trim()) {
+          throw new Error('Invite code is required to create an account');
+        }
+        body = { email, password, name, inviteCode };
+      }
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -203,6 +213,16 @@ function AuthForm({ onLogin }: { onLogin: (token: string) => void }) {
                 onChange={e => setName(e.target.value)} required
                 className="w-full px-4 py-3 rounded-xl bg-surface-container-high border border-outline-variant/10 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary transition-colors"
               />
+            )}
+            {!isLogin && (
+              <div className="relative">
+                <input
+                  type="text" placeholder="Invite code" value={inviteCode}
+                  onChange={e => setInviteCode(e.target.value)} required
+                  className="w-full px-4 py-3 rounded-xl bg-surface-container-high border border-outline-variant/10 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-tertiary transition-colors"
+                />
+                <p className="mt-1 text-[10px] text-tertiary/70">Ask Yev for an invite code to create an account</p>
+              </div>
             )}
             <input
               type="email" placeholder="Email address" value={email}

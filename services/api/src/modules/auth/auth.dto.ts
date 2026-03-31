@@ -15,6 +15,10 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   name?: string;
+
+  @ApiProperty({ example: 'socos-invite-2026' })
+  @IsString()
+  inviteCode: string;
 }
 
 export class LoginDto {

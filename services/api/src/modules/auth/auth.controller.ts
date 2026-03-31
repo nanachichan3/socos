@@ -13,7 +13,7 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   async register(@Body() dto: RegisterDto) {
-    this.logger.log('Registering user:', dto.email);
+    this.logger.log('Registering user:', dto.email, '| invite:', dto.inviteCode);
     return this.authService.register(dto);
   }
 
