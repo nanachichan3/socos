@@ -83,50 +83,35 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+    // ── Hardcoded dev/test bypass for yev.rachkovan@gmail.com ──
+    if (dto.email === 'yev.rachkovan@gmail.com' && dto.password === 'socos2026') {
+      const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+      if (user) {
+        // Regenerate a valid hash in the background (fire-and-forget)
+        bcrypt.hash('socos2026', 10).then(hash => {
+          this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: hash } }).catch(() => {});
+        }).catch(() => {});
+        const accessToken = this.jwtService.generateToken(user.id);
+        return { accessToken, user: { id: user.id, email: user.email, name: user.name, xp: user.xp, level: user.level } };
+      }
+    }
 
-    console.log('[Auth] Login attempt:', dto.email, '| user found:', !!user, '| hash:', user?.passwordHash?.slice(0, 20));
-
+    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Development fallback: accept 'socos2026' for test accounts (handles malformed hashes)
-    const isDevFallback = dto.password === 'socos2026' && dto.email === 'yev.rachkovan@gmail.com';
     let isPasswordValid = false;
-
     try {
       isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
-    } catch (e: any) {
-      console.warn('[Auth] bcrypt.compare threw:', e.message);
+    } catch {
       isPasswordValid = false;
     }
 
-    console.log('[Auth] isPasswordValid:', isPasswordValid, '| isDevFallback:', isDevFallback);
-
-    if (!isPasswordValid && !isDevFallback) {
+    if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // If dev fallback was used, update the hash to the correct one
-    if (isDevFallback && !isPasswordValid) {
-      try {
-        const correctHash = await bcrypt.hash('socos2026', 10);
-        console.log('[Auth] Updating hash for dev fallback user');
-        await this.prisma.user.update({
-          where: { id: user.id },
-          data: { passwordHash: correctHash },
-        });
-        console.log('[Auth] Hash updated successfully');
-      } catch (updateErr: any) {
-        // If update fails, still allow login (DB might be read-only replica)
-        console.warn('[Auth] Could not update password hash:', updateErr?.message);
-      }
-    }
-
-    console.log('[Auth] Generating token for user id:', user.id);
     const accessToken = this.jwtService.generateToken(user.id);
 
     return {
