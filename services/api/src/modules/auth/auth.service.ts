@@ -85,14 +85,21 @@ export class AuthService {
   async login(dto: LoginDto): Promise<AuthResponseDto> {
     // ── Hardcoded dev/test bypass for yev.rachkovan@gmail.com ──
     if (dto.email === 'yev.rachkovan@gmail.com' && dto.password === 'socos2026') {
-      const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
-      if (user) {
-        // Regenerate a valid hash in the background (fire-and-forget)
-        bcrypt.hash('socos2026', 10).then(hash => {
-          this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: hash } }).catch(() => {});
-        }).catch(() => {});
-        const accessToken = this.jwtService.generateToken(user.id);
-        return { accessToken, user: { id: user.id, email: user.email, name: user.name, xp: user.xp, level: user.level } };
+      try {
+        const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+        if (user) {
+          console.log('[Auth] Bypass: found user', user.id);
+          // Regenerate a valid hash in the background (fire-and-forget)
+          bcrypt.hash('socos2026', 10).then(hash => {
+            this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: hash } }).catch(e => console.error('[Auth] Hash update failed:', e.message));
+          }).catch(e => console.error('[Auth] Bcrypt hash failed:', e.message));
+          const accessToken = this.jwtService.generateToken(user.id);
+          console.log('[Auth] Bypass: token generated for', user.email);
+          return { accessToken, user: { id: user.id, email: user.email, name: user.name, xp: user.xp, level: user.level } };
+        }
+      } catch (e: any) {
+        console.error('[Auth] Bypass error:', e.message, e.stack);
+        throw e;
       }
     }
 

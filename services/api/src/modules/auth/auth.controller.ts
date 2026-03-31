@@ -23,36 +23,43 @@ export class AuthController {
   @ApiOperation({ summary: 'Login with email and password' })
   async login(@Body() dto: LoginDto) {
     this.logger.log('Login attempt for:', dto.email);
-    return this.authService.login(dto);
+    try {
+      return await this.authService.login(dto);
+    } catch (err) {
+      this.logger.error('Login failed:', err.message, err.stack);
+      throw err;
+    }
   }
 
   // Debug: check what hash is stored for a user
   @Get('debug/hash')
   @HttpCode(HttpStatus.OK)
   async debugHash() {
-    const { PrismaService } = await import('../prisma/prisma.service.js');
-    const prisma = new PrismaService();
     try {
+      const { PrismaService } = await import('../prisma/prisma.service.js');
+      const prisma = new PrismaService();
       await prisma.onModuleInit();
-    } catch {}
-    const user = await prisma.user.findUnique({ where: { email: 'yev.rachkovan@gmail.com' } });
-    const hash = user?.passwordHash || 'NO_HASH';
-    const isValid = hash.length === 60;
-    let bcryptOk = false;
-    let bcryptErr = null;
-    try {
-      bcryptOk = await bcrypt.compare('socos2026', hash);
+      const user = await prisma.user.findUnique({ where: { email: 'yev.rachkovan@gmail.com' } });
+      const hash = user?.passwordHash || 'NO_HASH';
+      const isValid = hash.length === 60;
+      let bcryptOk = false;
+      let bcryptErr = null;
+      try {
+        bcryptOk = await bcrypt.compare('socos2026', hash);
+      } catch (e: any) {
+        bcryptErr = e.message;
+      }
+      return {
+        hasHash: !!user?.passwordHash,
+        hashLength: hash.length,
+        hashStartsWith: hash.substring(0, 10),
+        hashLooksValid: isValid,
+        bcryptCompareResult: bcryptOk,
+        bcryptError: bcryptErr,
+        userId: user?.id,
+      };
     } catch (e: any) {
-      bcryptErr = e.message;
+      return { error: e.message, stack: e.stack };
     }
-    return {
-      hasHash: !!user?.passwordHash,
-      hashLength: hash.length,
-      hashStartsWith: hash.substring(0, 10),
-      hashLooksValid: isValid,
-      bcryptCompareResult: bcryptOk,
-      bcryptError: bcryptErr,
-      userId: user?.id,
-    };
   }
 }
