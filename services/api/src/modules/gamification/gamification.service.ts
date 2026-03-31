@@ -128,4 +128,58 @@ export class GamificationService {
       orderBy: { xpReward: 'asc' },
     });
   }
+
+  async getStats(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        xp: true,
+        level: true,
+        _count: {
+          select: {
+            contacts: true,
+            interactions: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return { user: null, stats: null };
+    }
+
+    const xpForNextLevel = Math.pow(user.level, 2) * 100;
+    const xpForCurrentLevel = Math.pow(user.level - 1, 2) * 100;
+    const xpProgress = user.xp - xpForCurrentLevel;
+    const xpNeeded = xpForNextLevel - xpForCurrentLevel;
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        xp: user.xp,
+        level: user.level,
+      },
+      stats: {
+        totalContacts: user._count.contacts,
+        totalInteractions: user._count.interactions,
+        xpProgress,
+        xpNeeded,
+        levelName: this.getLevelName(user.level),
+      },
+    };
+  }
+
+  private getLevelName(level: number): string {
+    if (level < 5) return 'Social Novice';
+    if (level < 10) return 'Connector';
+    if (level < 20) return 'Network Builder';
+    if (level < 30) return 'Social Master';
+    if (level < 50) return 'Relationship Guru';
+    return 'Connection Virtuoso';
+  }
 }

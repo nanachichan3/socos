@@ -21,4 +21,10 @@ export class GamificationController {
   async getUserAchievements(@Request() req: { user: { userId: string } }) {
     return this.gamificationService.getUserAchievements(req.user.userId);
   }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Get user gamification stats for dashboard' })
+  async getStats(@Request() req: { user: { userId: string } }) {
+    return this.gamificationService.getStats(req.user.userId);
+  }
 }
