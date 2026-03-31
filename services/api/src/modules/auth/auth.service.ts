@@ -87,6 +87,8 @@ export class AuthService {
       where: { email: dto.email },
     });
 
+    console.log('[Auth] Login attempt:', dto.email, '| user found:', !!user, '| hash:', user?.passwordHash?.slice(0, 20));
+
     if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -97,9 +99,12 @@ export class AuthService {
 
     try {
       isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
-    } catch {
+    } catch (e: any) {
+      console.warn('[Auth] bcrypt.compare threw:', e.message);
       isPasswordValid = false;
     }
+
+    console.log('[Auth] isPasswordValid:', isPasswordValid, '| isDevFallback:', isDevFallback);
 
     if (!isPasswordValid && !isDevFallback) {
       throw new UnauthorizedException('Invalid credentials');
@@ -109,16 +114,19 @@ export class AuthService {
     if (isDevFallback && !isPasswordValid) {
       try {
         const correctHash = await bcrypt.hash('socos2026', 10);
+        console.log('[Auth] Updating hash for dev fallback user');
         await this.prisma.user.update({
           where: { id: user.id },
           data: { passwordHash: correctHash },
         });
-      } catch (updateErr) {
+        console.log('[Auth] Hash updated successfully');
+      } catch (updateErr: any) {
         // If update fails, still allow login (DB might be read-only replica)
-        console.warn('Could not update password hash:', updateErr);
+        console.warn('[Auth] Could not update password hash:', updateErr?.message);
       }
     }
 
+    console.log('[Auth] Generating token for user id:', user.id);
     const accessToken = this.jwtService.generateToken(user.id);
 
     return {
