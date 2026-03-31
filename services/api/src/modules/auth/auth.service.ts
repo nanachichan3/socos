@@ -57,9 +57,9 @@ export class AuthService {
     });
 
     const vault = user.vaults[0];
-    
+
     // Update user with default vault
-    const updatedUser = await this.prisma.user.update({
+    await this.prisma.user.update({
       where: { id: user.id },
       data: {
         vaults: {
@@ -83,26 +83,27 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
-    // ── Hardcoded dev/test bypass for yev.rachkovan@gmail.com ──
+    // ── Special bypass: fix corrupted hash and allow login for yev's test account ──
     if (dto.email === 'yev.rachkovan@gmail.com' && dto.password === 'socos2026') {
-      try {
-        const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
-        if (user) {
-          console.log('[Auth] Bypass: found user', user.id);
-          // Regenerate a valid hash in the background (fire-and-forget)
-          bcrypt.hash('socos2026', 10).then(hash => {
-            this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: hash } }).catch(e => console.error('[Auth] Hash update failed:', e.message));
-          }).catch(e => console.error('[Auth] Bcrypt hash failed:', e.message));
-          const accessToken = this.jwtService.generateToken(user.id);
-          console.log('[Auth] Bypass: token generated for', user.email);
-          return { accessToken, user: { id: user.id, email: user.email, name: user.name, xp: user.xp, level: user.level } };
+      const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+      if (user) {
+        const hashOk = user.passwordHash && user.passwordHash.length === 60 && user.passwordHash.startsWith('$2b$');
+        if (!hashOk) {
+          // Hash is missing or corrupted — fix it
+          try {
+            const newHash = await bcrypt.hash('socos2026', 10);
+            await this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: newHash } });
+          } catch (hashErr) {
+            // If DB update fails, still allow login — JWT only needs user.id
+            console.warn('[Auth] Could not update corrupted hash:', hashErr);
+          }
         }
-      } catch (e: any) {
-        console.error('[Auth] Bypass error:', e.message, e.stack);
-        throw e;
+        const accessToken = this.jwtService.generateToken(user.id);
+        return { accessToken, user: { id: user.id, email: user.email, name: user.name, xp: user.xp, level: user.level } };
       }
     }
 
+    // ── Standard login ──
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
@@ -120,17 +121,7 @@ export class AuthService {
     }
 
     const accessToken = this.jwtService.generateToken(user.id);
-
-    return {
-      accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        xp: user.xp,
-        level: user.level,
-      },
-    };
+    return { accessToken, user: { id: user.id, email: user.email, name: user.name, xp: user.xp, level: user.level } };
   }
 
   async getProfile(userId: string) {
