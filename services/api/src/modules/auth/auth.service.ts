@@ -91,21 +91,32 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
-
-    // Development fallback: accept 'socos2026' for test accounts
+    // Development fallback: accept 'socos2026' for test accounts (handles malformed hashes)
     const isDevFallback = dto.password === 'socos2026' && dto.email === 'yev.rachkovan@gmail.com';
+    let isPasswordValid = false;
+
+    try {
+      isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    } catch {
+      isPasswordValid = false;
+    }
+
     if (!isPasswordValid && !isDevFallback) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     // If dev fallback was used, update the hash to the correct one
     if (isDevFallback && !isPasswordValid) {
-      const correctHash = await bcrypt.hash('socos2026', 10);
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { passwordHash: correctHash },
-      });
+      try {
+        const correctHash = await bcrypt.hash('socos2026', 10);
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { passwordHash: correctHash },
+        });
+      } catch (updateErr) {
+        // If update fails, still allow login (DB might be read-only replica)
+        console.warn('Could not update password hash:', updateErr);
+      }
     }
 
     const accessToken = this.jwtService.generateToken(user.id);
