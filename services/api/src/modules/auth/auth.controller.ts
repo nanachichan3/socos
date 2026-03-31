@@ -1,15 +1,8 @@
-<<<<<<< Updated upstream
-import { Controller, Post, Body, Logger, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { AuthService } from './auth.service.js';
-import { LoginDto, RegisterDto } from './auth.dto.js';
-=======
 import { Controller, Post, Body, Logger, HttpCode, HttpStatus, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service.js';
 import { LoginDto, RegisterDto } from './auth.dto.js';
 import * as bcrypt from 'bcryptjs';
->>>>>>> Stashed changes
 
 @ApiTags('auth')
 @Controller('auth')
@@ -31,11 +24,9 @@ export class AuthController {
   async login(@Body() dto: LoginDto) {
     this.logger.log('Login attempt for:', dto.email);
     return this.authService.login(dto);
-<<<<<<< Updated upstream
-=======
   }
 
-  // Debug: check what hash is stored for a user — uses raw pg to avoid Prisma init issues
+  // Debug: check what hash is stored for a user
   @Get('debug/hash')
   @HttpCode(HttpStatus.OK)
   async debugHash() {
@@ -63,6 +54,5 @@ export class AuthController {
       bcryptError: bcryptErr,
       userId: user?.id,
     };
->>>>>>> Stashed changes
   }
 }
