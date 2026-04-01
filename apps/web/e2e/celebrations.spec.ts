@@ -1,6 +1,6 @@
 import { test, expect, request } from '@playwright/test';
 
-const BASE = 'https://api.self-degree.com';
+const BASE = 'https://socos.rachkovan.com/api';
 const TEST_USER = {
   email: 'yev.rachkovan@gmail.com',
   password: 'socos2026',
@@ -9,7 +9,7 @@ const TEST_USER = {
 // Helper: get auth token via API login
 async function getAuthToken(): Promise<string> {
   const ctx = await request.newContext({ baseURL: BASE });
-  const res = await ctx.post('/api/auth/login', {
+  const res = await ctx.post('/auth/login', {
     data: { email: TEST_USER.email, password: TEST_USER.password },
     headers: { 'Content-Type': 'application/json' },
   });
@@ -51,7 +51,7 @@ test.describe('Celebrations — Pack CRUD', () => {
   });
 
   test('system packs are visible to any user', async () => {
-    const { status, body } = await apiFetch('/api/celebrations/packs', token);
+    const { status, body } = await apiFetch('/celebrations/packs', token);
     expect(status).toBe(200);
     expect(Array.isArray(body)).toBe(true);
     // System packs (Buddhism, Global, Cultural) should be present
@@ -67,7 +67,7 @@ test.describe('Celebrations — Pack CRUD', () => {
   });
 
   test('user can create a custom pack', async () => {
-    const { status, body } = await apiFetch('/api/celebrations/packs', token, {
+    const { status, body } = await apiFetch('/celebrations/packs', token, {
       method: 'POST',
       data: { name: testPackName, description: 'E2E test pack' },
     });
@@ -79,21 +79,21 @@ test.describe('Celebrations — Pack CRUD', () => {
   });
 
   test('user can get their own pack by ID', async () => {
-    const { status, body } = await apiFetch(`/api/celebrations/packs/${packId}`, token);
+    const { status, body } = await apiFetch(`/celebrations/packs/${packId}`, token);
     expect(status).toBe(200);
     expect(body.id).toBe(packId);
   });
 
   test('user cannot delete a system pack', async () => {
-    const { status } = await apiFetch('/api/celebrations/packs', token);
-    const systemPack = (await apiFetch('/api/celebrations/packs', token)).body
+    const { status } = await apiFetch('/celebrations/packs', token);
+    const systemPack = (await apiFetch('/celebrations/packs', token)).body
       .find((p: any) => p.isSystem);
-    const res = await apiFetch(`/api/celebrations/packs/${systemPack.id}`, token, { method: 'DELETE' });
+    const res = await apiFetch(`/celebrations/packs/${systemPack.id}`, token, { method: 'DELETE' });
     expect(res.status).toBe(403);
   });
 
   test('user can update their own pack', async () => {
-    const { status, body } = await apiFetch(`/api/celebrations/packs/${packId}`, token, {
+    const { status, body } = await apiFetch(`/celebrations/packs/${packId}`, token, {
       method: 'PUT',
       data: { name: `${testPackName} Updated` },
     });
@@ -102,10 +102,10 @@ test.describe('Celebrations — Pack CRUD', () => {
   });
 
   test('user can delete their own pack', async () => {
-    const { status } = await apiFetch(`/api/celebrations/packs/${packId}`, token, { method: 'DELETE' });
+    const { status } = await apiFetch(`/celebrations/packs/${packId}`, token, { method: 'DELETE' });
     expect(status).toBe(200);
     // Confirm it's gone
-    const { status: s2 } = await apiFetch(`/api/celebrations/packs/${packId}`, token);
+    const { status: s2 } = await apiFetch(`/celebrations/packs/${packId}`, token);
     expect(s2).toBe(404);
   });
 });
@@ -120,11 +120,11 @@ test.describe('Celebrations — Celebration CRUD', () => {
   });
 
   test('system pack celebrations are visible', async () => {
-    const packs = (await apiFetch('/api/celebrations/packs', token)).body;
+    const packs = (await apiFetch('/celebrations/packs', token)).body;
     const buddhismPack = packs.find((p: any) => p.name === 'Buddhism Celebrations');
 
     const { status, body } = await apiFetch(
-      `/api/celebrations/packs/${buddhismPack.id}/celebrations`,
+      `/celebrations/packs/${buddhismPack.id}/celebrations`,
       token
     );
     expect(status).toBe(200);
@@ -140,14 +140,14 @@ test.describe('Celebrations — Celebration CRUD', () => {
 
   test('user can add a celebration to their own pack', async () => {
     // First create a pack
-    const { body: pack } = await apiFetch('/api/celebrations/packs', token, {
+    const { body: pack } = await apiFetch('/celebrations/packs', token, {
       method: 'POST',
       data: { name: testPackName, description: 'for celebrations test' },
     });
     packId = pack.id;
 
     const { status, body } = await apiFetch(
-      `/api/celebrations/packs/${packId}/celebrations`,
+      `/celebrations/packs/${packId}/celebrations`,
       token,
       {
         method: 'POST',
@@ -170,7 +170,7 @@ test.describe('Celebrations — Celebration CRUD', () => {
 
   test('celebration MM-DD date format is validated', async () => {
     const { status } = await apiFetch(
-      `/api/celebrations/packs/${packId}/celebrations`,
+      `/celebrations/packs/${packId}/celebrations`,
       token,
       {
         method: 'POST',
@@ -187,7 +187,7 @@ test.describe('Celebrations — Celebration CRUD', () => {
 
   test('user can update their own celebration', async () => {
     const { status, body } = await apiFetch(
-      `/api/celebrations/packs/${packId}/celebrations/${celebrationId}`,
+      `/celebrations/packs/${packId}/celebrations/${celebrationId}`,
       token,
       {
         method: 'PUT',
@@ -201,7 +201,7 @@ test.describe('Celebrations — Celebration CRUD', () => {
 
   test('user can delete their own celebration', async () => {
     const { status } = await apiFetch(
-      `/api/celebrations/packs/${packId}/celebrations/${celebrationId}`,
+      `/celebrations/packs/${packId}/celebrations/${celebrationId}`,
       token,
       { method: 'DELETE' }
     );
@@ -220,7 +220,7 @@ test.describe('Celebrations — Contact Attachments', () => {
 
   test('can attach a celebration to a contact', async () => {
     // Find a contact
-    const contactsRes = await apiFetch('/api/contacts?limit=1', token);
+    const contactsRes = await apiFetch('/contacts?limit=1', token);
     if (contactsRes.status !== 200 || contactsRes.body.contacts.length === 0) {
       // No contacts — skip this block (user has no data)
       test.skip();
@@ -229,17 +229,17 @@ test.describe('Celebrations — Contact Attachments', () => {
     contactId = contactsRes.body.contacts[0].id;
 
     // Get a celebration
-    const packs = (await apiFetch('/api/celebrations/packs', token)).body;
+    const packs = (await apiFetch('/celebrations/packs', token)).body;
     const globalPack = packs.find((p: any) => p.name === 'Global Holidays');
     const celebrations = (await apiFetch(
-      `/api/celebrations/packs/${globalPack.id}/celebrations`,
+      `/celebrations/packs/${globalPack.id}/celebrations`,
       token
     )).body;
     const earthDay = celebrations.find((c: any) => c.name === 'Earth Day');
     expect(earthDay).toBeDefined();
 
     const { status, body } = await apiFetch(
-      `/api/celebrations/contacts/${contactId}`,
+      `/celebrations/contacts/${contactId}`,
       token,
       {
         method: 'POST',
@@ -256,7 +256,7 @@ test.describe('Celebrations — Contact Attachments', () => {
     if (!contactId) { test.skip(); return; }
 
     const { status, body } = await apiFetch(
-      `/api/celebrations/contacts/${contactId}`,
+      `/celebrations/contacts/${contactId}`,
       token
     );
     expect(status).toBe(200);
@@ -266,27 +266,27 @@ test.describe('Celebrations — Contact Attachments', () => {
   test('can update celebration status for a contact', async () => {
     if (!contactId) { test.skip(); return; }
 
-    const contacts = (await apiFetch('/api/contacts?limit=1', token)).body.contacts;
+    const contacts = (await apiFetch('/contacts?limit=1', token)).body.contacts;
     if (!contacts?.[0]) { test.skip(); return; }
     const cid = contacts[0].id;
 
-    const packs = (await apiFetch('/api/celebrations/packs', token)).body;
+    const packs = (await apiFetch('/celebrations/packs', token)).body;
     const globalPack = packs.find((p: any) => p.name === 'Global Holidays');
     const celebrations = (await apiFetch(
-      `/api/celebrations/packs/${globalPack.id}/celebrations`,
+      `/celebrations/packs/${globalPack.id}/celebrations`,
       token
     )).body;
     const earthDay = celebrations.find((c: any) => c.name === 'Earth Day');
 
     // Attach
-    await apiFetch(`/api/celebrations/contacts/${cid}`, token, {
+    await apiFetch(`/celebrations/contacts/${cid}`, token, {
       method: 'POST',
       data: { celebrationId: earthDay.id, status: 'active' },
     });
 
     // Update to ignored
     const { status, body } = await apiFetch(
-      `/api/celebrations/contacts/${cid}/${earthDay.id}`,
+      `/celebrations/contacts/${cid}/${earthDay.id}`,
       token,
       { method: 'PUT', data: { status: 'ignored' } }
     );
@@ -297,26 +297,26 @@ test.describe('Celebrations — Contact Attachments', () => {
   test('can detach a celebration from a contact', async () => {
     if (!contactId) { test.skip(); return; }
 
-    const contacts = (await apiFetch('/api/contacts?limit=1', token)).body.contacts;
+    const contacts = (await apiFetch('/contacts?limit=1', token)).body.contacts;
     if (!contacts?.[0]) { test.skip(); return; }
     const cid = contacts[0].id;
 
-    const packs = (await apiFetch('/api/celebrations/packs', token)).body;
+    const packs = (await apiFetch('/celebrations/packs', token)).body;
     const globalPack = packs.find((p: any) => p.name === 'Global Holidays');
     const celebrations = (await apiFetch(
-      `/api/celebrations/packs/${globalPack.id}/celebrations`,
+      `/celebrations/packs/${globalPack.id}/celebrations`,
       token
     )).body;
     const earthDay = celebrations.find((c: any) => c.name === 'Earth Day');
 
     // Attach then detach
-    await apiFetch(`/api/celebrations/contacts/${cid}`, token, {
+    await apiFetch(`/celebrations/contacts/${cid}`, token, {
       method: 'POST',
       data: { celebrationId: earthDay.id },
     });
 
     const { status } = await apiFetch(
-      `/api/celebrations/contacts/${cid}/${earthDay.id}`,
+      `/celebrations/contacts/${cid}/${earthDay.id}`,
       token,
       { method: 'DELETE' }
     );
@@ -324,26 +324,26 @@ test.describe('Celebrations — Contact Attachments', () => {
   });
 
   test('cannot attach the same celebration twice to the same contact', async () => {
-    const contacts = (await apiFetch('/api/contacts?limit=1', token)).body.contacts;
+    const contacts = (await apiFetch('/contacts?limit=1', token)).body.contacts;
     if (!contacts?.[0]) { test.skip(); return; }
     const cid = contacts[0].id;
 
-    const packs = (await apiFetch('/api/celebrations/packs', token)).body;
+    const packs = (await apiFetch('/celebrations/packs', token)).body;
     const globalPack = packs.find((p: any) => p.name === 'Global Holidays');
     const celebrations = (await apiFetch(
-      `/api/celebrations/packs/${globalPack.id}/celebrations`,
+      `/celebrations/packs/${globalPack.id}/celebrations`,
       token
     )).body;
     const halloween = celebrations.find((c: any) => c.name === 'Halloween');
 
     // First attach
-    await apiFetch(`/api/celebrations/contacts/${cid}`, token, {
+    await apiFetch(`/celebrations/contacts/${cid}`, token, {
       method: 'POST',
       data: { celebrationId: halloween.id },
     });
 
     // Second attach — should fail (unique constraint)
-    const { status } = await apiFetch(`/api/celebrations/contacts/${cid}`, token, {
+    const { status } = await apiFetch(`/celebrations/contacts/${cid}`, token, {
       method: 'POST',
       data: { celebrationId: halloween.id },
     });
@@ -361,7 +361,7 @@ test.describe('Celebrations — Global Status', () => {
   });
 
   test('upcoming celebrations returns events in next 30 days', async () => {
-    const { status, body } = await apiFetch('/api/celebrations/upcoming/list', token);
+    const { status, body } = await apiFetch('/celebrations/upcoming/list', token);
     expect(status).toBe(200);
     // Body should be an array or object with an array
     const items = Array.isArray(body) ? body : body.celebrations || body.items || [];
@@ -377,14 +377,14 @@ test.describe('Celebrations — Global Status', () => {
 
 test.describe('Celebrations — Auth & Security', () => {
   test('unauthenticated requests are rejected', async () => {
-    const { status } = await apiFetch('/api/celebrations/packs', 'bad-token');
+    const { status } = await apiFetch('/celebrations/packs', 'bad-token');
     expect([401, 403]).toContain(status);
   });
 
   test('cannot access another users pack via pack ID', async () => {
     // Try to access a non-existent pack UUID
     const { status } = await apiFetch(
-      '/api/celebrations/packs/00000000-0000-0000-0000-000000000000',
+      '/celebrations/packs/00000000-0000-0000-0000-000000000000',
       await getAuthToken()
     );
     // 403 (forbidden — can't access) or 404 (not found) are both acceptable
