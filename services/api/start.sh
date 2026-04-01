@@ -11,7 +11,7 @@ async function setupDatabase() {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) { console.error('[startup] DATABASE_URL not set!'); return; }
   
-  const client = new Client({ connectionString: dbUrl, ssl: false, connectionTimeoutMillis: 10000 });
+  const client = new Client({ connectionString: dbUrl, ssl: false, connectionTimeoutMillis: 30000 });
   
   try {
     await client.connect();
@@ -157,6 +157,7 @@ async function setupDatabase() {
     
   } catch(e) {
     console.error('[startup] FATAL ERROR:', e.message);
+    process.exit(1); // Fail so container stops and Coolify can investigate
   } finally {
     try { await client.end(); } catch(e) {}
   }
