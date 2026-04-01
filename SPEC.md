@@ -83,6 +83,16 @@ An open-source, AI-powered personal CRM that helps you build meaningful relation
 - **Shared vaults**: Couples, families, teams
 - **Access control**: Fine-grained permissions
 
+### 9. Celebrations
+- **Celebration Packs**: Bundle celebrations into themed packs (e.g., "Buddhism Celebrations", "Global Holidays")
+- **System Packs**: Default packs available to all users (ownerId=null)
+- **User Packs**: Custom packs created by individual users
+- **Recurring Dates**: MM-DD format for annual events
+- **One-time Events**: Full date (YYYY-MM-DD) for non-recurring
+- **Per-Contact Attachment**: Attach celebrations to contacts with optional date override
+- **Global Status Toggle**: Mark celebrations as "active" or "ignored" globally (bulk update across all contacts)
+- **Upcoming View**: See celebrations coming up in the next 30 days
+
 ---
 
 ## Technical Architecture
@@ -158,6 +168,22 @@ socos/
 - name, description
 - isShared, members[]
 
+### CelebrationPack
+- id, ownerId (null = system pack)
+- name, description
+- isDefault
+
+### Celebration
+- id, packId, ownerId (null = system)
+- name, description
+- date (MM-DD), fullDate (YYYY-MM-DD optional)
+- icon, category (religious, secular, cultural, personal)
+
+### ContactCelebration (junction)
+- id, contactId, celebrationId, ownerId
+- customDate (optional override)
+- status (active/ignored)
+
 ---
 
 ## API Endpoints (Agent-First Design)
@@ -182,6 +208,24 @@ socos/
 - `GET /api/user/stats` - XP, level, achievements
 - `GET /api/achievements` - Available achievements
 - `POST /api/achievements/:id/claim` - Claim achievement
+
+### Celebrations
+- `GET /api/celebrations/packs` - List all available packs
+- `GET /api/celebrations/packs/:packId` - Get pack with celebrations
+- `POST /api/celebrations/packs` - Create custom pack
+- `PUT /api/celebrations/packs/:packId` - Update pack
+- `DELETE /api/celebrations/packs/:packId` - Delete pack
+- `GET /api/celebrations/packs/:packId/celebrations` - List celebrations in pack
+- `POST /api/celebrations/packs/:packId/celebrations` - Add celebration to pack
+- `PUT /api/celebrations/packs/:packId/celebrations/:id` - Update celebration
+- `DELETE /api/celebrations/packs/:packId/celebrations/:id` - Delete celebration
+- `GET /api/celebrations/:id` - Get celebration details
+- `PUT /api/celebrations/:id/global-status` - Set global status (active/ignored)
+- `GET /api/celebrations/upcoming/list` - Upcoming celebrations (30 days)
+- `GET /api/celebrations/contacts/:contactId` - Celebrations for a contact
+- `POST /api/celebrations/contacts/:contactId` - Attach celebration to contact
+- `PUT /api/celebrations/contacts/:contactId/:celebrationId` - Update contact celebration
+- `DELETE /api/celebrations/contacts/:contactId/:celebrationId` - Detach celebration
 
 ### AI Agents
 - `POST /api/agents/remind` - Get reminders

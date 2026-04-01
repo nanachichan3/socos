@@ -310,6 +310,76 @@ model Activity {
   @@index([contactId])
 }
 
+// ==================== CELEBRATION PACK ====================
+
+model CelebrationPack {
+  id          String   @id @default(cuid())
+  ownerId     String?  // null = system/default pack (available to all users)
+  name        String
+  description String?
+  isDefault   Boolean  @default(false) // true for system packs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  celebrations Celebration[]
+  @@index([ownerId])
+}
+
+// ==================== CELEBRATION ====================
+
+model Celebration {
+  id          String   @id @default(cuid())
+  packId      String
+  pack        CelebrationPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  ownerId     String?  // null = system/shared; if set, user owns their own copy
+
+  // Core fields
+  name        String
+  description String?
+  date        String   // MM-DD format (recurring annual date)
+  icon        String?  // emoji
+
+  // Optional: specific year date (for one-time events)
+  fullDate    DateTime? // YYYY-MM-DD for non-recurring
+
+  // Category
+  category    String   // religious, secular, cultural, personal
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  contactCelebrations ContactCelebration[]
+
+  @@index([packId])
+  @@index([ownerId])
+}
+
+// ==================== CONTACT CELEBRATION (junction) ========================
+
+model ContactCelebration {
+  id            String   @id @default(cuid())
+  contactId     String
+  contact       Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  celebrationId String
+  celebration   Celebration @relation(fields: [celebrationId], references: [id], onDelete: Cascade)
+  ownerId       String   // needed for auth scoping
+
+  // Override the celebration date for this contact (e.g. if their Buddhist birthday is different)
+  customDate    DateTime?
+
+  // Status: active = celebrate this, ignored = suppress globally
+  status        String   @default("active") // active, ignored
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([contactId, celebrationId])
+  @@index([contactId])
+  @@index([celebrationId])
+  @@index([ownerId])
+}
+
 // ==================== SESSIONS (Auth) ====================
 
 model Session {

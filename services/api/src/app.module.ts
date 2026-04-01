@@ -14,6 +14,8 @@ import { RemindersController } from './modules/reminders/reminders.controller.js
 import { RemindersService } from './modules/reminders/reminders.service.js';
 import { GamificationController } from './modules/gamification/gamification.controller.js';
 import { GamificationService } from './modules/gamification/gamification.service.js';
+import { CelebrationsController } from './modules/celebrations/celebrations.controller.js';
+import { CelebrationsService } from './modules/celebrations/celebrations.service.js';
 import { DebugController } from './modules/debug/debug.controller.js';
 
 @Module({
@@ -25,6 +27,7 @@ import { DebugController } from './modules/debug/debug.controller.js';
     InteractionsController,
     RemindersController,
     GamificationController,
+    CelebrationsController,
     DebugController,
   ],
   providers: [
@@ -36,6 +39,7 @@ import { DebugController } from './modules/debug/debug.controller.js';
     InteractionsService,
     RemindersService,
     GamificationService,
+    CelebrationsService,
   ],
 })
 export class AppModule {}
