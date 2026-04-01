@@ -89,9 +89,13 @@ An open-source, AI-powered personal CRM that helps you build meaningful relation
 - **User Packs**: Custom packs created by individual users
 - **Recurring Dates**: MM-DD format for annual events
 - **One-time Events**: Full date (YYYY-MM-DD) for non-recurring
+- **Calendar Types**: `gregorian` (fixed), `lunar` (computed via lunar calendar), `chinese` (Chinese lunar calendar)
 - **Per-Contact Attachment**: Attach celebrations to contacts with optional date override
+- **Per-Contact Reminders**: `shouldRemind` flag controls whether reminders fire for a contact celebration
 - **Global Status Toggle**: Mark celebrations as "active" or "ignored" globally (bulk update across all contacts)
-- **Upcoming View**: See celebrations coming up in the next 30 days
+- **Upcoming View**: See celebrations coming up in the next 30 days (with proper lunar date computation)
+- **Search**: Search celebrations across all packs by name or description
+- **Reminder View**: Get celebrations needing reminders in the next N days (default 14)
 
 ---
 
@@ -222,6 +226,8 @@ socos/
 - `GET /api/celebrations/:id` - Get celebration details
 - `PUT /api/celebrations/:id/global-status` - Set global status (active/ignored)
 - `GET /api/celebrations/upcoming/list` - Upcoming celebrations (30 days)
+- `GET /api/celebrations/search` - Search celebrations across all packs
+- `GET /api/celebrations/reminders` - Get celebrations needing reminders (next N days, default 14)
 - `GET /api/celebrations/contacts/:contactId` - Celebrations for a contact
 - `POST /api/celebrations/contacts/:contactId` - Attach celebration to contact
 - `PUT /api/celebrations/contacts/:contactId/:celebrationId` - Update contact celebration
