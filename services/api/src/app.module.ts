@@ -14,6 +14,7 @@ import { RemindersController } from './modules/reminders/reminders.controller.js
 import { RemindersService } from './modules/reminders/reminders.service.js';
 import { GamificationController } from './modules/gamification/gamification.controller.js';
 import { GamificationService } from './modules/gamification/gamification.service.js';
+import { DebugController } from './modules/debug/debug.controller.js';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -24,6 +25,7 @@ import { GamificationService } from './modules/gamification/gamification.service
     InteractionsController,
     RemindersController,
     GamificationController,
+    DebugController,
   ],
   providers: [
     PrismaService,
