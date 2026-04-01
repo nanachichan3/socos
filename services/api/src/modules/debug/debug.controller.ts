@@ -16,15 +16,17 @@ export class DebugController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Create all DB tables using raw SQL' })
   async dbPush() {
+    console.log('[db-push] Starting at', new Date().toISOString());
     const client = new Client({
       connectionString: process.env.DATABASE_URL,
       ssl: false,
-      // Timeout after 30s
-      connectionTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
     });
 
     try {
+      console.log('[db-push] Connecting to DB...');
       await client.connect();
+      console.log('[db-push] Connected!');
 
       const results: string[] = [];
 
