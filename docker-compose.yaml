@@ -28,7 +28,7 @@ services:
     build:
       context: .
       dockerfile: services/api/Dockerfile
-    command: sh -c "npx prisma migrate deploy && node dist/main.js"
+    command: sh -c "node node_modules/.bin/prisma migrate deploy && node dist/main.js"
     ports:
       - "${API_PORT:-3001}:3001"
     environment:
