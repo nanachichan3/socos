@@ -169,3 +169,27 @@ export class GlobalStatusDto {
   @IsString()
   status: string;
 }
+
+export class SearchCelebrationsDto {
+  @ApiPropertyOptional({ example: 'Buddha' })
+  @IsOptional()
+  @IsString()
+  q?: string;
+
+  @ApiPropertyOptional({ example: 'religious' })
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @ApiPropertyOptional({ example: 'sys-buddhism' })
+  @IsOptional()
+  @IsString()
+  packId?: string;
+
+  @ApiPropertyOptional({ default: 20 })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  limit?: number;
+}

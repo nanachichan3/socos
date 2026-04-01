@@ -21,6 +21,7 @@ import {
   UpdateContactCelebrationDto,
   CelebrationQueryDto,
   GlobalStatusDto,
+  SearchCelebrationsDto,
 } from './celebrations.dto.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 
@@ -37,6 +38,18 @@ export class CelebrationsController {
   @ApiOperation({ summary: 'Get all celebration packs available to the user' })
   async findAllPacks(@Request() req: { user: { userId: string } }) {
     return this.celebrationsService.findAllPacks(req.user.userId);
+  }
+
+  @Get('search')
+  @ApiOperation({ summary: 'Search celebrations across all packs' })
+  async search(@Request() req: { user: { userId: string } }, @Query() query: SearchCelebrationsDto) {
+    return this.celebrationsService.searchCelebrations(req.user.userId, query);
+  }
+
+  @Get('reminders')
+  @ApiOperation({ summary: 'Get celebrations that should trigger reminders in the next N days' })
+  async getReminders(@Request() req: { user: { userId: string } }, @Query('days') days?: number) {
+    return this.celebrationsService.getReminderCelebrations(req.user.userId, days || 14);
   }
 
   @Get('packs/:packId')

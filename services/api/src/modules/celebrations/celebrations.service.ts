@@ -1,4 +1,8 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const lunar = require('lunar');
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   CreateCelebrationPackDto,
@@ -9,11 +13,159 @@ import {
   UpdateContactCelebrationDto,
   CelebrationQueryDto,
   GlobalStatusDto,
+  SearchCelebrationsDto,
 } from './celebrations.dto.js';
+// ==================== LUNAR DATE HELPER ====================
+
+function lunarToGregorian(lunarMonth: number, lunarDay: number, year: number): Date {
+  try {
+    // lunar.toGregorian expects { year, month, day } and returns { date: Date }
+    const result = (lunar as any).toGregorian({ year, month: lunarMonth, day: lunarDay });
+    return result.date;
+  } catch {
+    return new Date(year, lunarMonth - 1, lunarDay);
+  }
+}
+
+function getGregorianDateForCelebration(celebration: { date: string; fullDate: Date | null; calendarType: string }, targetYear: number): Date | null {
+  const { date, fullDate, calendarType } = celebration;
+
+  if (fullDate) {
+    return fullDate;
+  }
+
+  const [month, day] = date.split('-').map(Number);
+  if (!month || !day) return null;
+
+  // For lunar/chinese calendars, compute the gregorian date
+  if (calendarType === 'lunar' || calendarType === 'chinese') {
+    // Get the gregorian date for this year's lunar date
+    // Most lunar holidays are on the same lunar date each year, but move ~11 days earlier each year
+    return lunarToGregorian(month, day, targetYear);
+  }
+
+  // Gregorian (fixed date)
+  return new Date(targetYear, month - 1, day);
+}
+
+// ==================== SERVICE ====================
 
 @Injectable()
 export class CelebrationsService {
   constructor(private prisma: PrismaService) {}
+
+  // ==================== SEARCH ====================
+
+  async searchCelebrations(userId: string, query: SearchCelebrationsDto) {
+    const { q, category, packId, limit = 20 } = query;
+
+    const where: any = {
+      OR: [{ ownerId: null }, { ownerId: userId }],
+    };
+
+    if (q) {
+      where.AND = {
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { description: { contains: q, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    if (category) {
+      where.category = category;
+    }
+
+    if (packId) {
+      where.packId = packId;
+    }
+
+    const [celebrations, total] = await Promise.all([
+      this.prisma.celebration.findMany({
+        where,
+        include: { pack: { select: { id: true, name: true } } },
+        take: limit,
+        orderBy: { name: 'asc' },
+      }),
+      this.prisma.celebration.count({ where }),
+    ]);
+
+    return {
+      celebrations: celebrations.map((c) => ({
+        ...c,
+        isSystem: c.ownerId === null,
+      })),
+      total,
+      query: q,
+    };
+  }
+
+  // ==================== REMINDERS ====================
+
+  async getReminderCelebrations(userId: string, days = 14) {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const endDate = new Date(now);
+    endDate.setDate(endDate.getDate() + days);
+
+    const toRemind = await this.prisma.contactCelebration.findMany({
+      where: { ownerId: userId, status: 'active', shouldRemind: true },
+      include: {
+        celebration: {
+          include: { pack: { select: { id: true, name: true } } },
+        },
+        contact: {
+          select: { id: true, name: true, avatar: true, firstName: true, lastName: true },
+        },
+      },
+    });
+
+    const reminders = [];
+
+    for (const cc of toRemind) {
+      const gregDate = getGregorianDateForCelebration(
+        { date: cc.celebration.date, fullDate: cc.celebration.fullDate, calendarType: cc.celebration.calendarType },
+        currentYear,
+      );
+
+      if (!gregDate) continue;
+
+      if (gregDate < now || gregDate > endDate) {
+        if (gregDate < now) {
+          const nextYear = getGregorianDateForCelebration(
+            { date: cc.celebration.date, fullDate: cc.celebration.fullDate, calendarType: cc.celebration.calendarType },
+            currentYear + 1,
+          );
+          if (nextYear && nextYear <= endDate) {
+            reminders.push(this.buildReminderItem(cc, nextYear, currentYear + 1, now));
+          }
+        }
+        continue;
+      }
+
+      reminders.push(this.buildReminderItem(cc, gregDate, currentYear, now));
+    }
+
+    return reminders.sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 50);
+  }
+
+  private buildReminderItem(cc: any, occDate: Date, year: number, now: Date) {
+    const contactName = cc.contact.name ||
+      [cc.contact.firstName, cc.contact.lastName].filter(Boolean).join(' ') ||
+      'Unknown';
+    return {
+      contactId: cc.contact.id,
+      contactName,
+      contactAvatar: cc.contact.avatar,
+      celebrationId: cc.celebration.id,
+      celebrationName: cc.celebration.name,
+      celebrationIcon: cc.celebration.icon,
+      calendarType: cc.celebration.calendarType,
+      nextOccurrence: occDate,
+      daysUntil: Math.ceil((occDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+      year,
+    };
+  }
 
   // ==================== CELEBRATION PACKS ====================
 
@@ -509,26 +661,10 @@ export class CelebrationsService {
       },
     });
 
-    // Calculate upcoming dates
+    // Calculate upcoming dates (now with proper lunar calendar support)
     const upcoming = contactCelebrations
       .map((cc) => {
-        let eventDate: Date;
-
-        if (cc.celebration.fullDate) {
-          eventDate = new Date(cc.celebration.fullDate);
-          // If fullDate has passed this year, it's for next year
-          if (eventDate < now) {
-            eventDate = new Date(eventDate.setFullYear(currentYear + 1));
-          }
-        } else {
-          // Parse MM-DD and create date for current/next year
-          const [month, day] = cc.celebration.date.split('-').map(Number);
-          eventDate = new Date(currentYear, month - 1, day);
-          // If date has passed, move to next year
-          if (eventDate < now) {
-            eventDate = new Date(currentYear + 1, month - 1, day);
-          }
-        }
+        let eventDate: Date | null;
 
         // Use custom date if set
         if (cc.customDate) {
@@ -536,7 +672,25 @@ export class CelebrationsService {
           if (eventDate < now) {
             eventDate = new Date(eventDate.setFullYear(currentYear + 1));
           }
+        } else {
+          eventDate = getGregorianDateForCelebration(
+            {
+              date: cc.celebration.date,
+              fullDate: cc.celebration.fullDate,
+              calendarType: cc.celebration.calendarType,
+            },
+            currentYear,
+          );
+          if (!eventDate || eventDate < now) {
+            const nextYearDate = getGregorianDateForCelebration(
+              { date: cc.celebration.date, fullDate: cc.celebration.fullDate, calendarType: cc.celebration.calendarType },
+              currentYear + 1,
+            );
+            if (nextYearDate) eventDate = nextYearDate;
+          }
         }
+
+        if (!eventDate) return null;
 
         return {
           id: cc.id,
