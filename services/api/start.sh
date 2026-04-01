@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+# Run Prisma migrations
+echo "Running database migrations..."
+node node_modules/.bin/prisma migrate deploy || {
+  echo "Migration failed (may already be applied or DB not ready yet) — continuing..."
+}
+
 # Run seed migration
 echo "Running database seed..."
 node -e "
