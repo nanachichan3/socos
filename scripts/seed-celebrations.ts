@@ -39,6 +39,7 @@ async function main() {
       date: '05-15',
       icon: '🪷',
       category: 'religious',
+      calendarType: 'lunar',
     },
     {
       name: 'Magha Puja',
@@ -46,6 +47,7 @@ async function main() {
       date: '02-15',
       icon: '🕉️',
       category: 'religious',
+      calendarType: 'lunar',
     },
     {
       name: 'Asalha Puja',
@@ -53,6 +55,7 @@ async function main() {
       date: '07-15',
       icon: '☸️',
       category: 'religious',
+      calendarType: 'lunar',
     },
     {
       name: 'Buddhist New Year',
@@ -60,6 +63,7 @@ async function main() {
       date: '04-14',
       icon: '🎊',
       category: 'religious',
+      calendarType: 'lunar',
     },
     {
       name: 'Dhamma Day',
@@ -67,6 +71,7 @@ async function main() {
       date: '08-15',
       icon: '🕯️',
       category: 'religious',
+      calendarType: 'lunar',
     },
     {
       name: 'Kathina Ceremony',
@@ -74,6 +79,7 @@ async function main() {
       date: '10-01',
       icon: '👔',
       category: 'religious',
+      calendarType: 'lunar',
     },
   ];
 
@@ -194,6 +200,7 @@ async function main() {
       date: '01-29',
       icon: '🐉',
       category: 'cultural',
+      calendarType: 'chinese',
     },
     {
       name: 'Diwali',
@@ -201,6 +208,7 @@ async function main() {
       date: '10-20',
       icon: '🪔',
       category: 'cultural',
+      calendarType: 'lunar',
     },
     {
       name: 'Hanukkah',
@@ -208,6 +216,7 @@ async function main() {
       date: '12-18',
       icon: '🕎',
       category: 'cultural',
+      calendarType: 'lunar',
     },
     {
       name: 'Eid al-Fitr',
@@ -215,13 +224,15 @@ async function main() {
       date: '03-30',
       icon: '🌙',
       category: 'cultural',
+      calendarType: 'lunar',
     },
     {
       name: 'Easter',
-      description: 'Christian holiday celebrating the resurrection of Jesus Christ',
+      description: 'Christian holiday celebrating the resurrection of Jesus Christ. Date varies between Western and Orthodox traditions.',
       date: '04-20',
       icon: '🐰',
       category: 'cultural',
+      calendarType: 'lunar',
     },
     {
       name: 'Nowruz',
@@ -229,6 +240,7 @@ async function main() {
       date: '03-20',
       icon: '🌸',
       category: 'cultural',
+      calendarType: 'gregorian',
     },
   ];
 

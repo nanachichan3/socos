@@ -325,6 +325,7 @@ export class CelebrationsService {
         data: {
           status: dto.status || 'active',
           customDate: dto.customDate ? new Date(dto.customDate) : undefined,
+          shouldRemind: dto.shouldRemind ?? existing.shouldRemind,
         },
         include: { celebration: true },
       });
@@ -338,6 +339,7 @@ export class CelebrationsService {
         ownerId: userId,
         status: dto.status || 'active',
         customDate: dto.customDate ? new Date(dto.customDate) : undefined,
+        shouldRemind: dto.shouldRemind ?? true,
       },
       include: { celebration: true },
     });
@@ -368,6 +370,7 @@ export class CelebrationsService {
     return contactCelebrations.map((cc) => ({
       id: cc.id,
       status: cc.status,
+      shouldRemind: cc.shouldRemind,
       customDate: cc.customDate,
       createdAt: cc.createdAt,
       celebration: {
@@ -410,6 +413,7 @@ export class CelebrationsService {
     if (dto.customDate !== undefined) {
       updateData.customDate = dto.customDate ? new Date(dto.customDate) : null;
     }
+    if (dto.shouldRemind !== undefined) updateData.shouldRemind = dto.shouldRemind;
 
     const updated = await this.prisma.contactCelebration.update({
       where: { id: contactCelebration.id },

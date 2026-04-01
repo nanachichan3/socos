@@ -346,6 +346,9 @@ model Celebration {
   // Category
   category    String   // religious, secular, cultural, personal
 
+  // Calendar type: gregorian (fixed date), lunar (moves yearly), chinese (Chinese lunar calendar)
+  calendarType String  @default("gregorian")
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -369,8 +372,11 @@ model ContactCelebration {
   // Override the celebration date for this contact (e.g. if their Buddhist birthday is different)
   customDate    DateTime?
 
-  // Status: active = celebrate this, ignored = suppress globally
+  // Status: active = celebrate this for this contact, ignored = suppress
   status        String   @default("active") // active, ignored
+
+  // Whether to generate a reminder for this contact's celebration
+  shouldRemind  Boolean  @default(true)
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

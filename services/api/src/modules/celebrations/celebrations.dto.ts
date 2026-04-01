@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, IsDateString, IsNumber, IsEnum, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsDateString, IsNumber, IsEnum, IsBoolean, Min, Max } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 // ==================== CELEBRATION PACK DTOs ====================
@@ -55,6 +55,11 @@ export class CreateCelebrationDto {
   @ApiProperty({ example: 'religious', description: 'religious, secular, cultural, personal' })
   @IsString()
   category: string;
+
+  @ApiPropertyOptional({ example: 'lunar', description: 'gregorian (fixed), lunar (yearly varying), chinese (Chinese lunar calendar)' })
+  @IsOptional()
+  @IsString()
+  calendarType?: string;
 }
 
 export class UpdateCelebrationDto {
@@ -110,6 +115,11 @@ export class AttachCelebrationDto {
   @IsOptional()
   @IsDateString()
   customDate?: string;
+
+  @ApiPropertyOptional({ example: true, description: 'Whether to generate a reminder for this contact' })
+  @IsOptional()
+  @IsBoolean()
+  shouldRemind?: boolean;
 }
 
 export class UpdateContactCelebrationDto {
@@ -122,6 +132,11 @@ export class UpdateContactCelebrationDto {
   @IsOptional()
   @IsDateString()
   customDate?: string;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  shouldRemind?: boolean;
 }
 
 export class CelebrationQueryDto {
