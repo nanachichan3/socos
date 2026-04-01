@@ -3,9 +3,13 @@ set -e
 
 # Run Prisma migrations
 echo "Running database migrations..."
-node node_modules/.bin/prisma migrate deploy || {
-  echo "Migration failed (may already be applied or DB not ready yet) — continuing..."
-}
+node node_modules/.bin/prisma migrate deploy
+MIGRATE_EXIT=$?
+if [ $MIGRATE_EXIT -ne 0 ]; then
+  echo "Migration exited with code $MIGRATE_EXIT - investigating..."
+  node node_modules/.bin/prisma migrate status || true
+fi
+echo "Migration complete (exit code: $MIGRATE_EXIT)"
 
 # Run seed migration
 echo "Running database seed..."
