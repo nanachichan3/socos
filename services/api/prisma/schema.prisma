@@ -105,12 +105,13 @@ model Contact {
   updatedAt       DateTime @updatedAt
 
   // Relations
-  interactions    Interaction[]
-  reminders       Reminder[]
-  contactFields   ContactField[]
-  tasks           Task[]
-  gifts           Gift[]
-  activities      Activity[]
+  interactions       Interaction[]
+  reminders          Reminder[]
+  contactFields      ContactField[]
+  tasks              Task[]
+  gifts              Gift[]
+  activities         Activity[]
+  contactCelebrations ContactCelebration[]
 
   // Indexes
   @@index([vaultId])
