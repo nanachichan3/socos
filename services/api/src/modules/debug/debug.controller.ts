@@ -1,9 +1,6 @@
 import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { execSync } from 'child_process';
 
 @ApiTags('debug')
 @Controller('debug')
@@ -16,15 +13,15 @@ export class DebugController {
     const errors: string[] = [];
 
     try {
-      // Run prisma db push to create tables
-      const { stdout, stderr } = await execAsync(
-        'node node_modules/.bin/prisma db push --accept-data-loss',
-        { cwd: '/app/services/api', timeout: 60000 },
-      );
+      const stdout = execSync(
+        'node node_modules/.bin/prisma db push --accept-data-loss --skip-generate',
+        { cwd: '/app/services/api', timeout: 60000, stdio: ['pipe', 'pipe', 'pipe'] },
+      ).toString();
       results.push('db push stdout:', stdout);
-      if (stderr) errors.push('db push stderr:', stderr);
     } catch (e: any) {
       errors.push('db push error:', e.message);
+      if (e.stderr) errors.push('stderr:', e.stderr.toString());
+      if (e.stdout) errors.push('stdout:', e.stdout.toString());
     }
 
     return { results, errors };
