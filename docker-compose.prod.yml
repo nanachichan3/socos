@@ -20,6 +20,8 @@ services:
     restart: unless-stopped
     networks:
       - coolify
+    labels:
+      - "traefik.docker.network=coolify"
 
   api:
     build:
