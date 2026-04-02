@@ -19,7 +19,6 @@ services:
         condition: service_started
     restart: unless-stopped
     networks:
-      - default
       - coolify
 
   api:
@@ -47,7 +46,6 @@ services:
       retries: 5
       start_period: 120s
     networks:
-      - default
       - coolify
 
   platform:
@@ -59,7 +57,6 @@ services:
         VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
     restart: unless-stopped
     networks:
-      - default
       - coolify
 
   db:
