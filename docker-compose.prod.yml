@@ -32,9 +32,12 @@ services:
       - "${API_PORT:-3010}:3001"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-socos}}
       - JWT_SECRET=${JWT_SECRET:-socos-dev-secret-2026}
       - PORT=3001
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-socos}
     depends_on:
       db:
         condition: service_healthy
