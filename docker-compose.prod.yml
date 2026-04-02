@@ -20,12 +20,6 @@ services:
     restart: unless-stopped
     networks:
       - coolify
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.socos.rule=Host(`socos.rachkovan.com`)"
-      - "traefik.http.routers.socos.entrypoints=websecure"
-      - "traefik.http.routers.socos.tls=true"
-      - "traefik.http.services.socos.loadbalancer.server.port=80"
 
   api:
     build:
