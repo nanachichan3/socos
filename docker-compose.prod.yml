@@ -18,8 +18,6 @@ services:
       api:
         condition: service_started
     restart: unless-stopped
-    networks:
-      - coolify
 
   api:
     build:
@@ -29,8 +27,8 @@ services:
       - "3010:3001"
     environment:
       - NODE_ENV=production
-      # Use PostgreSQL internal hostname on coolify network
-      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@d48ck8o0488cc4skc4k8os0s:5432/socos?sslmode=allow
+      # Use PostgreSQL external URL (accessible from Docker bridge network)
+      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@host.docker.internal:5430/socos?sslmode=allow
       - JWT_SECRET=socos-dev-secret-2026
       - PORT=3001
     restart: unless-stopped
@@ -40,8 +38,6 @@ services:
       timeout: 15s
       retries: 5
       start_period: 120s
-    networks:
-      - coolify
 
   platform:
     build:
@@ -51,9 +47,3 @@ services:
         VITE_BACKEND_URL: ${VITE_BACKEND_URL:-https://socos.rachkovan.com}
         VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
     restart: unless-stopped
-    networks:
-      - coolify
-
-networks:
-  coolify:
-    external: true
