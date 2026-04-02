@@ -30,11 +30,11 @@ services:
     environment:
       - NODE_ENV=production
       # Use Coolify managed PostgreSQL internal URL (pg-nanachi on coolify network)
-      - DATABASE_URL=postgresql://postgres:WFBGCo6cjCf7NbxVfkPSe5x0P41v3d27MowubhpPmfk9CgrfcMhBUvp8lyCfjobL@x0k4w8404wckwwcswg808gco:5432/socos
+      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@d48ck8o0488cc4skc4k8os0s:5432/socos?sslmode=allow
       - JWT_SECRET=socos-dev-secret-2026
       - PORT=3001
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=WFBGCo6cjCf7NbxVfkPSe5x0P41v3d27MowubhpPmfk9CgrfcMhBUvp8lyCfjobL
+      - POSTGRES_PASSWORD=uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u
       - POSTGRES_DB=socos
     depends_on:
       db:
