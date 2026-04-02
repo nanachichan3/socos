@@ -108,14 +108,14 @@ export class CelebrationsService {
     const endDate = new Date(now);
     endDate.setDate(endDate.getDate() + days);
 
-    const toRemind = await this.prisma.contactCelebration.findMany({
+    const toRemind: any[] = await this.prisma.contactCelebration.findMany({
       where: { ownerId: userId, status: 'active', shouldRemind: true },
       include: {
         celebration: {
           include: { pack: { select: { id: true, name: true } } },
         },
         contact: {
-          select: { id: true, name: true, avatar: true, firstName: true, lastName: true },
+          select: { id: true, firstName: true, lastName: true, photo: true },
         },
       },
     });
@@ -150,13 +150,13 @@ export class CelebrationsService {
   }
 
   private buildReminderItem(cc: any, occDate: Date, year: number, now: Date) {
-    const contactName = cc.contact.name ||
+    const contactName =
       [cc.contact.firstName, cc.contact.lastName].filter(Boolean).join(' ') ||
       'Unknown';
     return {
       contactId: cc.contact.id,
       contactName,
-      contactAvatar: cc.contact.avatar,
+      contactAvatar: cc.contact.photo,
       celebrationId: cc.celebration.id,
       celebrationName: cc.celebration.name,
       celebrationIcon: cc.celebration.icon,
