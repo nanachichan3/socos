@@ -18,6 +18,9 @@ services:
       api:
         condition: service_started
     restart: unless-stopped
+    networks:
+      - default
+      - coolify
 
   api:
     build:
@@ -43,6 +46,9 @@ services:
       timeout: 15s
       retries: 5
       start_period: 120s
+    networks:
+      - default
+      - coolify
 
   platform:
     build:
@@ -52,6 +58,9 @@ services:
         VITE_BACKEND_URL: ${VITE_BACKEND_URL:-https://socos.rachkovan.com}
         VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
     restart: unless-stopped
+    networks:
+      - default
+      - coolify
 
   db:
     image: postgres:15-alpine
@@ -68,6 +77,9 @@ services:
       retries: 10
       start_period: 20s
     restart: unless-stopped
+    networks:
+      - default
 
-volumes:
-  postgres-data:
+networks:
+  coolify:
+    external: true
