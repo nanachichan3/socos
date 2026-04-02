@@ -1,15 +1,10 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { Client } from 'pg';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(req: Request) {
   // Security: only in development or with a secret
-  const secret = req.headers['x-setup-secret'];
+  const secret = req.headers.get('x-setup-secret');
   if (process.env.SETUP_SECRET && secret !== process.env.SETUP_SECRET) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const dbHost = process.env.DB_HOST || 'db';
@@ -182,14 +177,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `);
 
       const celebrations = [
-        // Buddhism
         ['sys-buddhism-vesak','sys-buddhism','Vesak','Birth, enlightenment & passing of Gautama Buddha','05-15','🪷','religious','lunar'],
         ['sys-buddhism-magha','sys-buddhism','Magha Puja','Gathering of 1,250 enlightened monks','02-15','🕉️','religious','lunar'],
         ['sys-buddhism-asalha','sys-buddhism','Asalha Puja','Buddha''s first sermon and Sangha founding','07-15','☸️','religious','lunar'],
         ['sys-buddhism-ny','sys-buddhism','Buddhist New Year','Theravada tradition, mid-April','04-14','🎊','religious','lunar'],
         ['sys-buddhism-dhamma','sys-buddhism','Dhamma Day','Reflection on impermanence','08-15','🕯️','religious','lunar'],
         ['sys-buddhism-kathina','sys-buddhism','Kathina Ceremony','Robe offering to monks','10-01','👔','religious','lunar'],
-        // Global
         ['sys-global-nyd','sys-global',"New Year's Day",'Beginning of the Gregorian year','01-01','🎆','secular','gregorian'],
         ['sys-global-val','sys-global',"Valentine's Day",'Day of love and affection','02-14','💝','secular','gregorian'],
         ['sys-global-aprilfools','sys-global',"April Fools' Day",'Day of pranks','04-01','🃏','secular','gregorian'],
@@ -199,7 +192,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ['sys-global-thanks','sys-global','Thanksgiving','Day of gratitude (US)','11-27','🦃','cultural','gregorian'],
         ['sys-global-xmas','sys-global','Christmas',"Christ's birth celebration",'12-25','🎄','religious','gregorian'],
         ['sys-global-nye','sys-global',"New Year's Eve",'Last day of the year','12-31','🥂','secular','gregorian'],
-        // Cultural
         ['sys-cultural-cny','sys-cultural','Lunar New Year','Chinese New Year','01-29','🐉','cultural','chinese'],
         ['sys-cultural-diwali','sys-cultural','Diwali','Hindu festival of lights','10-20','🪔','cultural','lunar'],
         ['sys-cultural-hanukkah','sys-cultural','Hanukkah','Jewish festival of lights','12-18','🕎','cultural','lunar'],
@@ -227,9 +219,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     results.push(`✅ Final tables: ${finalTables.rows.map(r => r.table_name).join(', ')}`);
 
     await client.end();
-    return res.status(200).json({ success: true, results });
+    return Response.json({ success: true, results });
 
   } catch(e: any) {
-    return res.status(500).json({ error: e.message, stack: e.stack, results });
+    return Response.json({ error: e.message, results }, { status: 500 });
   }
 }
