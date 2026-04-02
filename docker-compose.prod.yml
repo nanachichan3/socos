@@ -20,6 +20,12 @@ services:
     restart: unless-stopped
     networks:
       - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.socos.rule=Host(`socos.rachkovan.com`)"
+      - "traefik.http.routers.socos.entrypoints=websecure"
+      - "traefik.http.routers.socos.tls=true"
+      - "traefik.http.services.socos.loadbalancer.server.port=80"
 
   api:
     build:
@@ -29,8 +35,8 @@ services:
       - "3010:3001"
     environment:
       - NODE_ENV=production
-      # Use PostgreSQL external URL - accessible from Docker host network
-      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@37.27.52.204:5430/socos?sslmode=allow
+      # Use PostgreSQL internal hostname on coolify network
+      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@d48ck8o0488cc4skc4k8os0s:5432/socos?sslmode=allow
       - JWT_SECRET=socos-dev-secret-2026
       - PORT=3001
     restart: unless-stopped
