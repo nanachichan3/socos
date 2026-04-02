@@ -21,6 +21,7 @@ services:
     networks:
       - frontend
       - backend
+      - coolify
     restart: unless-stopped
 
   # NestJS API
@@ -43,6 +44,7 @@ services:
         condition: service_healthy
     networks:
       - backend
+      - coolify
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health/check || exit 1"]
@@ -61,6 +63,7 @@ services:
         VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
     networks:
       - frontend
+      - coolify
     restart: unless-stopped
 
   # PostgreSQL Database (local)
@@ -88,3 +91,6 @@ volumes:
 networks:
   frontend:
   backend:
+  coolify:
+    external: true
+    name: coolify
