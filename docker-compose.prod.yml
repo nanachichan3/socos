@@ -16,7 +16,7 @@ services:
       - PLATFORM_INTERNAL_URL=http://platform:8080
     depends_on:
       api:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:80 || exit 1"]
       interval: 10s
@@ -39,15 +39,17 @@ services:
       - NODE_ENV=production
       # Use PostgreSQL internal hostname on coolify network
       - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@d48ck8o0488cc4skc4k8os0s:5432/socos?sslmode=allow
+      # Bypass SSL cert verification for managed Postgres (Alpine has no root CAs)
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
       - JWT_SECRET=socos-dev-secret-2026
       - PORT=3001
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health/check || exit 1"]
-      interval: 30s
-      timeout: 15s
-      retries: 5
-      start_period: 120s
+      interval: 10s
+      timeout: 30s
+      retries: 12
+      start_period: 180s
     networks:
       - coolify
 

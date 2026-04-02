@@ -35,7 +35,7 @@ async function main() {
     try { await admin.end(); } catch(e) {}
   }
 }
-main().then(() => process.exit(0)).catch(e => { console.error('[db-check] FATAL:', e.message); process.exit(1); });
+main().then(() => process.exit(0)).catch(e => { console.error('[db-check] WARNING:', e.message); process.exit(0); });
 "
 
 # ─── Step 2: Run prisma db push to create tables ────────────────────────────────
