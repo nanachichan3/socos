@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     const tables = await client.query(
       `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`
     );
-    const existingTables = tables.rows.map(r => r.table_name);
+    const existingTables = tables.rows.map((r: any) => r.table_name);
     results.push(`ℹ️  Existing tables: ${existingTables.join(', ') || 'none'}`);
 
     // Create User table
@@ -217,7 +217,7 @@ export async function POST(req: Request) {
     const finalTables = await client.query(
       `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`
     );
-    results.push(`✅ Final tables: ${finalTables.rows.map(r => r.table_name).join(', ')}`);
+    results.push(`✅ Final tables: ${finalTables.rows.map((r: any) => r.table_name).join(', ')}`);
 
     await client.end();
     return Response.json({ success: true, results });
