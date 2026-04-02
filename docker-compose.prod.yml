@@ -23,6 +23,14 @@ services:
       - backend
       - coolify
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.socos.rule=Host(`socos.rachkovan.com`)"
+      - "traefik.http.routers.socos.entrypoints=websecure"
+      - "traefik.http.routers.socos.tls=true"
+      - "traefik.http.routers.socos.tls.certresolver=letsencrypt"
+      - "traefik.http.services.socos.loadbalancer.server.port=3000"
+      - "traefik.docker.network=coolify"
 
   # NestJS API
   api:
