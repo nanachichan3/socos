@@ -1,3 +1,4 @@
+// @ts-ignore - pg types not available in web workspace
 import { Client } from 'pg';
 
 export async function POST(req: Request) {
