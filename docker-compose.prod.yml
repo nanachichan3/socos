@@ -29,16 +29,14 @@ services:
       - "3010:3001"
     environment:
       - NODE_ENV=production
-      # Use Coolify managed PostgreSQL internal URL (pg-nanachi on coolify network)
-      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@d48ck8o0488cc4skc4k8os0s:5432/socos?sslmode=allow
+      # Use PostgreSQL Production external URL (public IP) since internal hostname
+      # may not resolve from default Docker bridge network
+      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@37.27.52.204:5430/socos?sslmode=allow
       - JWT_SECRET=socos-dev-secret-2026
       - PORT=3001
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u
       - POSTGRES_DB=socos
-    depends_on:
-      db:
-        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health/check || exit 1"]
@@ -56,24 +54,6 @@ services:
       args:
         VITE_BACKEND_URL: ${VITE_BACKEND_URL:-https://socos.rachkovan.com}
         VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
-    restart: unless-stopped
-    networks:
-      - coolify
-
-  db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=socos-db-pass-2026
-      - POSTGRES_DB=socos
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -h localhost"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
     restart: unless-stopped
     networks:
       - coolify
