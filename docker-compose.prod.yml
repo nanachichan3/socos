@@ -29,15 +29,10 @@ services:
       - "3010:3001"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:socos-db-pass-2026@db:5432/socos
+      # DATABASE_URL is injected by Coolify from linked PostgreSQL add-on
+      # Do NOT hardcode - it will override Coolify's managed database connection
       - JWT_SECRET=socos-dev-secret-2026
       - PORT=3001
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=socos-db-pass-2026
-      - POSTGRES_DB=socos
-    depends_on:
-      db:
-        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health/check || exit 1"]
@@ -55,24 +50,6 @@ services:
       args:
         VITE_BACKEND_URL: ${VITE_BACKEND_URL:-https://socos.rachkovan.com}
         VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
-    restart: unless-stopped
-    networks:
-      - coolify
-
-  db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=socos-db-pass-2026
-      - POSTGRES_DB=socos
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -h localhost"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
     restart: unless-stopped
     networks:
       - coolify

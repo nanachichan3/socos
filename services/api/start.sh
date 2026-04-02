@@ -4,10 +4,16 @@ set -e
 echo "[startup] === SOCOS API starting ==="
 echo "[startup] DATABASE_URL: ${DATABASE_URL:-not set}"
 
+# Parse hostname from DATABASE_URL (format: postgresql://user:pass@hostname:port/dbname)
+DB_HOST=$(echo "$DATABASE_URL" | sed -E 's|.*@(.*):[0-9]+/.*|\1|')
+DB_USER=$(echo "$DATABASE_URL" | sed -E 's|postgresql://([^:]+):.*|\1|')
+DB_PORT=$(echo "$DATABASE_URL" | sed -E 's.*:([0-9]+)/.*|\1|')
+echo "[startup] Detected DB host: $DB_HOST, user: $DB_USER, port: $DB_PORT"
+
 # Wait for postgres to be truly ready
 echo "[startup] Waiting for postgres to be ready..."
 for i in $(seq 1 30); do
-  if pg_isready -h db -U postgres > /dev/null 2>&1; then
+  if pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" > /dev/null 2>&1; then
     echo "[startup] PostgreSQL is ready!"
     break
   fi
