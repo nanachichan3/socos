@@ -179,7 +179,7 @@ export async function POST(req: Request) {
       const celebrations = [
         ['sys-buddhism-vesak','sys-buddhism','Vesak','Birth, enlightenment & passing of Gautama Buddha','05-15','🪷','religious','lunar'],
         ['sys-buddhism-magha','sys-buddhism','Magha Puja','Gathering of 1,250 enlightened monks','02-15','🕉️','religious','lunar'],
-        ['sys-buddhism-asalha','sys-buddhism','Asalha Puja','Buddha''s first sermon and Sangha founding','07-15','☸️','religious','lunar'],
+        ['sys-buddhism-asalha','sys-buddhism','Asalha Puja',"Buddha's first sermon and Sangha founding",'07-15','☸️','religious','lunar'],
         ['sys-buddhism-ny','sys-buddhism','Buddhist New Year','Theravada tradition, mid-April','04-14','🎊','religious','lunar'],
         ['sys-buddhism-dhamma','sys-buddhism','Dhamma Day','Reflection on impermanence','08-15','🕯️','religious','lunar'],
         ['sys-buddhism-kathina','sys-buddhism','Kathina Ceremony','Robe offering to monks','10-01','👔','religious','lunar'],
