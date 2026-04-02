@@ -4,20 +4,22 @@ set -e
 echo "[startup] === SOCOS API starting ==="
 
 # ─── Step 1: Create socos database if missing ──────────────────────────────────
-# The db container's default DB is 'postgres'. We need 'socos'.
-# Connect to 'postgres' DB and create 'socos' if it doesn't exist.
-echo "[startup] Ensuring socos database exists..."
+# Coolify managed Postgres has sslmode=allow in DATABASE_URL which makes pg try SSL.
+# Strip the query string so our explicit ssl: false is respected.
+# Without this: "unable to verify the first certificate" on Alpine (no root CAs).
+if echo "$DATABASE_URL" | grep -q '?'; then
+  cleanUrl=$(echo "$DATABASE_URL" | sed 's/?.*//')
+else
+  cleanUrl="$DATABASE_URL"
+fi
+defaultUrl="${cleanUrl}/postgres"
+echo "[db-check] Connecting to: ${defaultUrl##*@}"
+
 node -e "
 const { Client } = require('pg');
-const dbUrl = process.env.DATABASE_URL;
-const socosUrl = dbUrl; // Already points to /socos since we set POSTGRES_DB=socos
-
-// Connect to postgres default DB first
-const defaultUrl = dbUrl.replace('/socos?', '/postgres?');
-console.log('[db-check] Connecting to:', defaultUrl.split('@')[1]);
-
-const admin = new Client({ connectionString: defaultUrl, ssl: false, connectionTimeoutMillis: 10000 });
-
+const url = '$defaultUrl';
+console.log('[db-check] Connecting to:', url.split('@')[1]);
+const admin = new Client({ connectionString: url, ssl: false, connectionTimeoutMillis: 15000 });
 async function main() {
   try {
     await admin.connect();
@@ -45,7 +47,10 @@ echo "[startup] Seeding celebration packs..."
 node -e "
 const { Client } = require('pg');
 async function seed() {
-  const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: false });
+  // Strip sslmode from URL for pg client (ssl: false must be respected)
+  const rawUrl = process.env.DATABASE_URL;
+  const dbUrl = rawUrl.includes('?') ? rawUrl.replace(/\?.*/, '') : rawUrl;
+  const client = new Client({ connectionString: dbUrl, ssl: false });
   try {
     await client.connect();
     
@@ -107,7 +112,10 @@ echo "[startup] Running seed.sql..."
 node -e "
 const { Client } = require('pg');
 const fs = require('fs');
-const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: false });
+// Strip sslmode for pg client
+const rawUrl = process.env.DATABASE_URL;
+const dbUrl = rawUrl.includes('?') ? rawUrl.replace(/\?.*/, '') : rawUrl;
+const client = new Client({ connectionString: dbUrl, ssl: false });
 client.connect()
   .then(() => client.query(fs.readFileSync(__dirname + '/prisma/seed.sql', 'utf8')))
   .then(() => { console.log('[seed.sql] Done!'); client.end(); })
