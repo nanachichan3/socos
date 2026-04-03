@@ -17,15 +17,7 @@ services:
     depends_on:
       api:
         condition: service_started
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:80 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     restart: unless-stopped
-    networks:
-      - coolify
     labels:
       - "traefik.docker.network=coolify"
 
@@ -40,7 +32,7 @@ services:
       # Use PostgreSQL internal hostname on coolify network
       - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@d48ck8o0488cc4skc4k8os0s:5432/socos?sslmode=allow
       # Bypass SSL cert verification for managed Postgres (Alpine has no root CAs)
-      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - NODE_TLS_REJECT_UNAUTHORIZED=1
       - JWT_SECRET=socos-dev-secret-2026
       - PORT=3001
     restart: unless-stopped
@@ -50,8 +42,6 @@ services:
       timeout: 30s
       retries: 12
       start_period: 180s
-    networks:
-      - coolify
 
   platform:
     build:
@@ -61,9 +51,3 @@ services:
         VITE_BACKEND_URL: ${VITE_BACKEND_URL:-https://socos.rachkovan.com}
         VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
     restart: unless-stopped
-    networks:
-      - coolify
-
-networks:
-  coolify:
-    external: true
