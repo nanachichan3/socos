@@ -15,8 +15,6 @@ services:
       - API_INTERNAL_URL=http://api:3001
       - PLATFORM_INTERNAL_URL=http://platform:8080
     restart: unless-stopped
-    networks:
-      - coolify
 
   api:
     build:
@@ -31,8 +29,6 @@ services:
       - JWT_SECRET=socos-dev-secret-2026
       - PORT=3001
     restart: unless-stopped
-    networks:
-      - coolify
 
   platform:
     build:
@@ -42,9 +38,3 @@ services:
         VITE_BACKEND_URL: ${VITE_BACKEND_URL:-https://socos.rachkovan.com}
         VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
     restart: unless-stopped
-    networks:
-      - coolify
-
-networks:
-  coolify:
-    external: true
