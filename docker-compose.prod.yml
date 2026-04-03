@@ -14,16 +14,13 @@ services:
       - NODE_ENV=production
       - API_INTERNAL_URL=http://api:3001
       - PLATFORM_INTERNAL_URL=http://platform:8080
-    depends_on:
-      api:
-        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:80 || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 10s
     networks:
       - coolify
 
