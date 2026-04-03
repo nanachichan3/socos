@@ -15,6 +15,7 @@ services:
       - API_INTERNAL_URL=http://api:3001
       - PLATFORM_INTERNAL_URL=http://platform:8080
     restart: unless-stopped
+    network_mode: "coolify"
 
   api:
     build:
@@ -29,3 +30,4 @@ services:
       - JWT_SECRET=socos-dev-secret-2026
       - PORT=3001
     restart: unless-stopped
+    network_mode: "coolify"
