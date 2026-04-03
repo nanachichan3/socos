@@ -16,17 +16,16 @@ services:
       - PLATFORM_INTERNAL_URL=http://platform:8080
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     networks:
       - coolify
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.socos.rule=Host(`socos.rachkovan.com`)"
-      - "traefik.http.routers.socos.entrypoints=websecure"
-      - "traefik.http.routers.socos.tls.certresolver=letsencrypt"
-      - "traefik.http.services.socos.loadbalancer.server.port=80"
-      - "traefik.docker.network=coolify"
 
   api:
     build:
