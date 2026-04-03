@@ -15,12 +15,6 @@ services:
       - API_INTERNAL_URL=http://api:3001
       - PLATFORM_INTERNAL_URL=http://platform:8080
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:80 || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
     networks:
       - coolify
 
@@ -37,12 +31,6 @@ services:
       - JWT_SECRET=socos-dev-secret-2026
       - PORT=3001
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health/check || exit 1"]
-      interval: 10s
-      timeout: 30s
-      retries: 12
-      start_period: 180s
     networks:
       - coolify
 
