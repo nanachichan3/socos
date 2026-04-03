@@ -90,5 +90,15 @@ ENV NODE_PATH=/app/services/api/node_modules
 HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=30s \
   CMD node -e "const http = require('http'); http.get('http://localhost:3000/', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
-# Start API first (wait for it), then start Next.js
-CMD ["tini", "--", "sh", "-c", "cd /app/services/api && sh start.sh && node dist/main.js & sleep 5 && node /app/apps/web/server.js"]
+# Wait for NestJS to be ready, then start Next.js
+CMD ["tini", "--", "sh", "-c", "\
+cd /app/services/api && \
+node start.sh || true && \
+node dist/main.js & \
+echo 'Waiting for NestJS to start...' && \
+for i in $(seq 1 30); do \
+  if wget -qO- http://localhost:3001/health/check > /dev/null 2>&1; then \
+    echo 'NestJS ready, starting Next.js'; break; fi; \
+  echo 'Waiting... attempt '$i; sleep 2; \
+done && \
+node /app/apps/web/server.js"]
