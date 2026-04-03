@@ -70,6 +70,9 @@ COPY --from=builder /app/services/api/package.json ./services/api/package.json
 COPY --from=builder /app/services/api/prisma ./services/api/prisma
 COPY --from=builder /app/services/api/start.sh ./services/api/start.sh
 
+# Remove "type":"module" so CommonJS dist runs as CommonJS (not ESM)
+RUN sed -i '/"type": "module",/d' /app/services/api/package.json
+
 # Also copy workspace node_modules for shared packages (Prisma, pg, etc.)
 COPY --from=builder /app/node_modules ./node_modules
 
