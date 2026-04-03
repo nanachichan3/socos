@@ -39,9 +39,11 @@ WORKDIR /app
 WORKDIR /app/apps/web
 RUN pnpm build
 
-# Build NestJS with ESM output
+# Build NestJS with CommonJS output (fixes ESM module resolution in container)
 WORKDIR /app/services/api
-RUN pnpm build
+RUN sed -i 's/"module": "nodenext"/"module": "commonjs"/' tsconfig.json && \
+    sed -i 's/"moduleResolution": "nodenext"/"moduleResolution": "node"/' tsconfig.json && \
+    pnpm build
 
 FROM node:22-alpine AS runner
 
@@ -79,6 +81,7 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV API_INTERNAL_URL=http://localhost:3001
+ENV NODE_PATH=/app/services/api/node_modules
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=30s \
   CMD node -e "const http = require('http'); http.get('http://localhost:3000/', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
