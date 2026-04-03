@@ -91,4 +91,4 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=30s \
   CMD node -e "const http = require('http'); http.get('http://localhost:3000/', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
 # Start API first (wait for it), then start Next.js
-CMD ["tini", "--", "sh", "-c", "cd /app/services/api && node dist/main.js & sleep 5 && node /app/apps/web/server.js"]
+CMD ["tini", "--", "sh", "-c", "cd /app/services/api && sh start.sh && node dist/main.js & sleep 5 && node /app/apps/web/server.js"]
