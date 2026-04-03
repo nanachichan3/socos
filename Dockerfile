@@ -91,10 +91,9 @@ ENV NODE_PATH=/app/services/api/node_modules
 HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=30s \
   CMD node -e "const http = require('http'); http.get('http://localhost:3000/', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
-# Wait for NestJS to be ready, then start Next.js
+# Start NestJS (db init happens inside main.ts), then Next.js
 CMD ["tini", "--", "sh", "-c", "\
 cd /app/services/api && \
-node start.sh || true && \
 node dist/main.js & \
 echo 'Waiting for NestJS to start...' && \
 for i in $(seq 1 30); do \
