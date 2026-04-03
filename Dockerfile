@@ -1,5 +1,5 @@
 # Combined SOCOS: Next.js web + NestJS API in one container
-# API runs on :3001, Next.js on :3000 (proxies /api/* → :3001)
+# API runs on :3001, Next.js on :3000
 FROM node:22-alpine AS deps
 
 WORKDIR /app
@@ -29,18 +29,13 @@ COPY apps/web/ apps/web/
 COPY services/api/ services/api/
 COPY packages/ packages/
 
-# Build Next.js
+# Build Next.js standalone
 WORKDIR /app/apps/web
 RUN pnpm build
 
-# Build NestJS
+# Build NestJS with ESM output
 WORKDIR /app/services/api
-RUN pnpm prisma generate
 RUN pnpm build
-
-# Copy Prisma client
-RUN cp -r /app/node_modules/.pnpm/@prisma+client*/node_modules/@prisma/client /app/services/api/node_modules/@prisma/client || true
-RUN cp -r /app/node_modules/.pnpm/@prisma+client*/node_modules/.prisma /app/services/api/node_modules/.prisma || true
 
 FROM node:22-alpine AS runner
 
@@ -54,16 +49,20 @@ RUN apk add --no-cache tini && \
     adduser --system --uid 1001 nextjs
 
 # Copy Next.js standalone build
-COPY --from=builder /app/apps/web/public ./apps/web/public
 COPY --from=builder /app/apps/web/.next/standalone ./
+
+# Copy Next.js static assets
 COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
 
-# Copy NestJS API
+# Copy NestJS API (dist + all node_modules including @nestjs packages)
 COPY --from=builder /app/services/api/dist ./services/api/dist
-COPY --from=builder /app/services/api/prisma ./services/api/prisma
 COPY --from=builder /app/services/api/node_modules ./services/api/node_modules
 COPY --from=builder /app/services/api/package.json ./services/api/package.json
+COPY --from=builder /app/services/api/prisma ./services/api/prisma
 COPY --from=builder /app/services/api/start.sh ./services/api/start.sh
+
+# Also copy workspace node_modules for shared packages (Prisma, pg, etc.)
+COPY --from=builder /app/node_modules ./node_modules
 
 RUN chown -R nextjs:nodejs /app
 
@@ -78,5 +77,5 @@ ENV API_INTERNAL_URL=http://localhost:3001
 HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=30s \
   CMD node -e "const http = require('http'); http.get('http://localhost:3000/', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
-# Run both: API on 3001, Next.js on 3000
-CMD ["tini", "--", "sh", "-c", "node /app/services/api/dist/main.js & node /app/apps/web/server.js"]
+# Start API first (wait for it), then start Next.js
+CMD ["tini", "--", "sh", "-c", "cd /app/services/api && node dist/main.js & sleep 5 && node /app/apps/web/server.js"]
