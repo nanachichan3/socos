@@ -17,6 +17,9 @@ COPY packages/typescript-config/package.json packages/typescript-config/
 
 RUN pnpm install --frozen-lockfile
 
+# Generate Prisma client (pnpm ignores prisma build scripts, so do it explicitly)
+RUN pnpm --filter @socos/api exec prisma generate
+
 FROM node:22-alpine AS builder
 
 WORKDIR /app
