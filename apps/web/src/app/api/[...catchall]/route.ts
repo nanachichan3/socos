@@ -1,0 +1,110 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+const API_BASE = process.env.API_INTERNAL_URL || 'http://localhost:3001';
+
+const HEADER_FILTER = ['host', 'connection', 'content-length'];
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { catchall: string[] } }
+) {
+  const path = params.catchall.join('/');
+  const url = new URL(request.url);
+  const query = url.search;
+  const headers: Record<string, string> = {};
+  request.headers.forEach((v, k) => {
+    if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
+  });
+  try {
+    const res = await fetch(`${API_BASE}/${path}${query}`, {
+      headers,
+      credentials: 'include',
+    });
+    const data = await res.text();
+    return new NextResponse(data, {
+      status: res.status,
+      headers: { 'Content-Type': res.headers.get('content-type') || 'application/json' },
+    });
+  } catch {
+    return NextResponse.json({ error: 'API unavailable' }, { status: 502 });
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { catchall: string[] } }
+) {
+  const path = params.catchall.join('/');
+  const headers: Record<string, string> = {};
+  request.headers.forEach((v, k) => {
+    if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
+  });
+  try {
+    const body = await request.text();
+    const res = await fetch(`${API_BASE}/${path}`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': headers['content-type'] || 'application/json' },
+      body,
+      credentials: 'include',
+    });
+    const data = await res.text();
+    return new NextResponse(data, {
+      status: res.status,
+      headers: { 'Content-Type': res.headers.get('content-type') || 'application/json' },
+    });
+  } catch {
+    return NextResponse.json({ error: 'API unavailable' }, { status: 502 });
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { catchall: string[] } }
+) {
+  const path = params.catchall.join('/');
+  const headers: Record<string, string> = {};
+  request.headers.forEach((v, k) => {
+    if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
+  });
+  try {
+    const body = await request.text();
+    const res = await fetch(`${API_BASE}/${path}`, {
+      method: 'PUT',
+      headers: { ...headers, 'Content-Type': headers['content-type'] || 'application/json' },
+      body,
+      credentials: 'include',
+    });
+    const data = await res.text();
+    return new NextResponse(data, {
+      status: res.status,
+      headers: { 'Content-Type': res.headers.get('content-type') || 'application/json' },
+    });
+  } catch {
+    return NextResponse.json({ error: 'API unavailable' }, { status: 502 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { catchall: string[] } }
+) {
+  const path = params.catchall.join('/');
+  const headers: Record<string, string> = {};
+  request.headers.forEach((v, k) => {
+    if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
+  });
+  try {
+    const res = await fetch(`${API_BASE}/${path}`, {
+      method: 'DELETE',
+      headers,
+      credentials: 'include',
+    });
+    const data = await res.text();
+    return new NextResponse(data, {
+      status: res.status,
+      headers: { 'Content-Type': res.headers.get('content-type') || 'application/json' },
+    });
+  } catch {
+    return NextResponse.json({ error: 'API unavailable' }, { status: 502 });
+  }
+}
