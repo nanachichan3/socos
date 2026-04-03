@@ -17,9 +17,6 @@ COPY packages/typescript-config/package.json packages/typescript-config/
 
 RUN pnpm install --frozen-lockfile
 
-# Generate Prisma client (pnpm ignores prisma build scripts, so do it explicitly)
-RUN pnpm --filter @socos/api exec prisma generate
-
 FROM node:22-alpine AS builder
 
 WORKDIR /app
@@ -31,6 +28,12 @@ COPY --from=deps /app/ ./
 COPY apps/web/ apps/web/
 COPY services/api/ services/api/
 COPY packages/ packages/
+
+# Generate Prisma client (pnpm ignores prisma build scripts, so do it explicitly)
+WORKDIR /app/services/api
+RUN pnpm exec prisma generate
+
+WORKDIR /app
 
 # Build Next.js standalone
 WORKDIR /app/apps/web
