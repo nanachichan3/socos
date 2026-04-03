@@ -4,17 +4,19 @@ const API_BASE = process.env.API_INTERNAL_URL || 'http://localhost:3001';
 
 const HEADER_FILTER = ['host', 'connection', 'content-length'];
 
-export async function GET(
+async function proxyRequest(
   request: NextRequest,
-  { params }: { params: { catchall: string[] } }
+  params: Promise<{ catchall: string[] }>
 ) {
-  const path = params.catchall.join('/');
+  const { catchall } = await params;
+  const path = catchall.join('/');
   const url = new URL(request.url);
   const query = url.search;
   const headers: Record<string, string> = {};
   request.headers.forEach((v, k) => {
     if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
   });
+
   try {
     const res = await fetch(`${API_BASE}/${path}${query}`, {
       headers,
@@ -30,11 +32,19 @@ export async function GET(
   }
 }
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ catchall: string[] }> }
+) {
+  return proxyRequest(request, params);
+}
+
 export async function POST(
   request: NextRequest,
-  { params }: { params: { catchall: string[] } }
+  { params }: { params: Promise<{ catchall: string[] }> }
 ) {
-  const path = params.catchall.join('/');
+  const { catchall } = await params;
+  const path = catchall.join('/');
   const headers: Record<string, string> = {};
   request.headers.forEach((v, k) => {
     if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
@@ -59,9 +69,10 @@ export async function POST(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { catchall: string[] } }
+  { params }: { params: Promise<{ catchall: string[] }> }
 ) {
-  const path = params.catchall.join('/');
+  const { catchall } = await params;
+  const path = catchall.join('/');
   const headers: Record<string, string> = {};
   request.headers.forEach((v, k) => {
     if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
@@ -86,9 +97,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { catchall: string[] } }
+  { params }: { params: Promise<{ catchall: string[] }> }
 ) {
-  const path = params.catchall.join('/');
+  const { catchall } = await params;
+  const path = catchall.join('/');
   const headers: Record<string, string> = {};
   request.headers.forEach((v, k) => {
     if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
