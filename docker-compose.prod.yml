@@ -12,7 +12,7 @@ services:
       - "3000:80"
     environment:
       - NODE_ENV=production
-      - API_INTERNAL_URL=http://api:3001
+      - API_INTERNAL_URL=http://localhost:3010
       - PLATFORM_INTERNAL_URL=http://platform:8080
     restart: unless-stopped
 
@@ -28,13 +28,4 @@ services:
       - NODE_TLS_REJECT_UNAUTHORIZED=1
       - JWT_SECRET=socos-dev-secret-2026
       - PORT=3001
-    restart: unless-stopped
-
-  platform:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.frontend
-      args:
-        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-https://socos.rachkovan.com}
-        VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
     restart: unless-stopped
