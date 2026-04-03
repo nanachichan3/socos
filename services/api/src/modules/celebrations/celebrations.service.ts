@@ -1,6 +1,4 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const lunar = require('lunar');
 import { PrismaService } from '../prisma/prisma.service.js';
