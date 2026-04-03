@@ -53,9 +53,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN apk add --no-cache tini && \
+RUN apk add --no-cache tini ca-certificates && \
     addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+    adduser --system --uid 1001 nextjs && \
+    update-ca-certificates
 
 # Copy Next.js standalone build
 COPY --from=builder /app/apps/web/.next/standalone ./
