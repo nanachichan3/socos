@@ -1,5 +1,6 @@
 # Combined SOCOS: Next.js web + NestJS API in one container
 # API runs on :3001, Next.js on :3000
+# v6 - force rebuild: CommonJS NestJS fix
 FROM node:22-alpine AS deps
 
 WORKDIR /app
