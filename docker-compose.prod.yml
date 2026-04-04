@@ -14,6 +14,7 @@ services:
       - "3000:3000"
     networks:
       - coolify
+      - swwcg80gkw4k0k4oco8w8wgw
     restart: unless-stopped
 
   api:
@@ -22,7 +23,7 @@ services:
       dockerfile: services/api/Dockerfile
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@37.27.52.204:5430/socos?sslmode=allow
+      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@37.27.52.204:5430/socos?sslmode=disable
       - NODE_TLS_REJECT_UNAUTHORIZED=0
       - JWT_SECRET=${JWT_SECRET:-socos-dev-secret-2026}
       - PORT=3001
@@ -30,8 +31,11 @@ services:
       - "3001"
     networks:
       - coolify
+      - swwcg80gkw4k0k4oco8w8wgw
     restart: unless-stopped
 
 networks:
   coolify:
+    external: true
+  swwcg80gkw4k0k4oco8w8wgw:
     external: true
