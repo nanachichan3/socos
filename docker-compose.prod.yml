@@ -10,6 +10,12 @@ services:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
     environment:
       - NODE_ENV=production
+      - API_INTERNAL_URL=http://api:3001
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web-swwcg80gkw4k0k4oco8w8wgw.rule=Host(`socos.rachkovan.com`)"
+      - "traefik.http.routers.web-swwcg80gkw4k0k4oco8w8wgw.entryPoints=http"
+      - "traefik.http.services.web-swwcg80gkw4k0k4oco8w8wgw.loadbalancer.server.port=3000"
     ports:
       - "3000:3000"
     networks:
@@ -27,6 +33,11 @@ services:
       - NODE_TLS_REJECT_UNAUTHORIZED=0
       - JWT_SECRET=${JWT_SECRET:-socos-dev-secret-2026}
       - PORT=3001
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api-swwcg80gkw4k0k4oco8w8wgw.rule=Host(`socos.rachkovan.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.api-swwcg80gkw4k0k4oco8w8wgw.entryPoints=http"
+      - "traefik.http.services.api-swwcg80gkw4k0k4oco8w8wgw.loadbalancer.server.port=3001"
     expose:
       - "3001"
     networks:
