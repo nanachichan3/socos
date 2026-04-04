@@ -5,7 +5,6 @@
   "author": "yevgeniusr",
   "private": true,
   "license": "MIT",
-  "type": "module",
   "main": "./dist/main.js",
   "module": "./dist/main.js",
   "files": [
