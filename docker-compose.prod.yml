@@ -22,8 +22,8 @@ services:
       dockerfile: services/api/Dockerfile
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@d48ck8o0488cc4skc4k8os0s:5432/socos?sslmode=allow
-      - NODE_TLS_REJECT_UNAUTHORIZED=1
+      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@37.27.52.204:5430/socos?sslmode=allow
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
       - JWT_SECRET=${JWT_SECRET:-socos-dev-secret-2026}
       - PORT=3001
     expose:
