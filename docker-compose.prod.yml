@@ -20,7 +20,6 @@ services:
       - "3000:3000"
     networks:
       - coolify
-      - swwcg80gkw4k0k4oco8w8wgw
     restart: unless-stopped
 
   api:
@@ -37,11 +36,8 @@ services:
       - "3001"
     networks:
       - coolify
-      - swwcg80gkw4k0k4oco8w8wgw
     restart: unless-stopped
 
 networks:
   coolify:
-    external: true
-  swwcg80gkw4k0k4oco8w8wgw:
     external: true
