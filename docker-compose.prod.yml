@@ -12,6 +12,8 @@ services:
       - NODE_ENV=production
     ports:
       - "3000:3000"
+    networks:
+      - coolify
     restart: unless-stopped
 
   api:
@@ -20,10 +22,16 @@ services:
       dockerfile: services/api/Dockerfile
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@qed.quest:5430/socos?sslmode=require
+      - DATABASE_URL=postgresql://postgres:uxMw0dyEf1ugsuBgYv0TMxI40BN0K79BzOwYtBIj7R8TFwe36WXQDZzFJWvA317u@d48ck8o0488cc4skc4k8os0s:5432/socos?sslmode=allow
       - NODE_TLS_REJECT_UNAUTHORIZED=1
       - JWT_SECRET=${JWT_SECRET:-socos-dev-secret-2026}
       - PORT=3001
     expose:
       - "3001"
+    networks:
+      - coolify
     restart: unless-stopped
+
+networks:
+  coolify:
+    external: true
