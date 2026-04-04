@@ -57,6 +57,9 @@ COPY --from=builder /app/services/api/prisma ./prisma
 COPY --from=builder /app/services/api/package.json ./
 COPY --from=builder /app/services/api/start.sh ./start.sh
 
+# Install prisma CLI globally in the runner so startup script can use it
+RUN npm install -g prisma@6.9.0 --save-exact
+
 USER nestjs
 
 EXPOSE 3001
