@@ -56,5 +56,18 @@ else
   ls -la /usr/local/bin/prisma 2>/dev/null || echo "[startup] /usr/local/bin/prisma not found"
 fi
 
+echo "[startup] === Testing database connectivity ==="
+node -e "
+const { Client } = require('pg');
+const url = process.env.DATABASE_URL;
+if (!url) { console.error('[db-test] DATABASE_URL not set'); process.exit(1); }
+const client = new Client({ connectionString: url, connectionTimeoutMillis: 8000, ssl: false });
+console.log('[db-test] Connecting to:', url.replace(/:[^:@]+@/, ':***@'));
+client.connect()
+  .then(() => { console.log('[db-test] Connected!'); return client.query('SELECT 1 as ok'); })
+  .then(r => { console.log('[db-test] Query OK:', r.rows[0]); client.end(); process.exit(0); })
+  .catch(e => { console.error('[db-test] Error:', e.message); process.exit(1); });
+" && echo "[startup] DB test passed" || { echo "[startup] DB test failed"; exit 1; }
+
 echo "[startup] Done. Starting NestJS."
 exec node dist/main.js
