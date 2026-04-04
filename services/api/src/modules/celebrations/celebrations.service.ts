@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const lunar = require('lunar');
+import { toGregorian } from "lunar";
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   CreateCelebrationPackDto,
@@ -18,7 +17,7 @@ import {
 function lunarToGregorian(lunarMonth: number, lunarDay: number, year: number): Date {
   try {
     // lunar.toGregorian expects { year, month, day } and returns { date: Date }
-    const result = (lunar as any).toGregorian({ year, month: lunarMonth, day: lunarDay });
+    const result = toGregorian({ year, month: lunarMonth, day: lunarDay });
     return result.date;
   } catch {
     return new Date(year, lunarMonth - 1, lunarDay);
