@@ -13,9 +13,10 @@ if (!urlStr) { console.error('[db-check] DATABASE_URL not set'); process.exit(0)
 try {
   const u = new URL(urlStr);
   const origDb = u.pathname.replace('/', '');
+  // Replace database name with 'postgres' for admin connection
   const adminUrl = urlStr.replace('/' + origDb + '?', '/' + 'postgres' + (u.search ? '?' + u.search : ''));
-  console.log('[db-check] Connecting to admin DB:', u.host + '/postgres');
-  const client = new Client({ connectionString: adminUrl, connectionTimeoutMillis: 10000, ssl: { rejectUnauthorized: false } });
+  console.log('[db-check] Connecting to admin DB:', u.hostname + '/postgres');
+  const client = new Client({ connectionString: adminUrl, connectionTimeoutMillis: 10000, ssl: false });
   client.connect().then(() => {
     return client.query('SELECT 1 FROM pg_database WHERE datname = \\'socos\\'');
   }).then(r => {
@@ -35,7 +36,6 @@ if [ -f "./node_modules/.bin/prisma" ]; then
   ./node_modules/.bin/prisma db push --accept-data-loss --skip-generate || echo "[startup] prisma db push done"
 else
   echo "[startup] prisma not available at ./node_modules/.bin/prisma"
-  # Try /prod/api path
   if [ -f "/prod/api/node_modules/.bin/prisma" ]; then
     echo "[startup] Found prisma at /prod/api/node_modules/.bin/prisma"
     /prod/api/node_modules/.bin/prisma db push --accept-data-loss --skip-generate || echo "[startup] prisma db push done"
