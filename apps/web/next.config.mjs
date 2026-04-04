@@ -12,22 +12,12 @@ const nextConfig = {
   turbopack: {
     root: resolve(__dirname, '../..'),
   },
+  // Nginx handles all routing - use relative paths
+  // These rewrites are for SSR and internal Next.js routing
   async rewrites() {
-    const apiHost = process.env.API_INTERNAL_URL || 'http://localhost:3001'
-    const platformHost = process.env.PLATFORM_INTERNAL_URL || 'http://localhost:5173'
     return [
-      {
-        source: '/api/:path*',
-        destination: `${apiHost}/:path*`,
-      },
-      {
-        source: '/platform',
-        destination: `${platformHost}/platform/`,
-      },
-      {
-        source: '/platform/:path*',
-        destination: `${platformHost}/platform/:path*`,
-      },
+      // API routes are handled by nginx reverse proxy on same host
+      // No rewrites needed - client goes to /api/* which nginx routes to NestJS
     ]
   },
 }
