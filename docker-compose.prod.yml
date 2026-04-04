@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Next.js Web App - directly exposed
   web:
     build:
       context: .
@@ -13,11 +12,8 @@ services:
       - NODE_ENV=production
     ports:
       - "3000:3000"
-    networks:
-      - p048s08k44sgg0gcw0cwssg4
     restart: unless-stopped
 
-  # NestJS API
   api:
     build:
       context: .
@@ -30,11 +26,4 @@ services:
       - PORT=3001
     expose:
       - "3001"
-    networks:
-      - p048s08k44sgg0gcw0cwssg4
     restart: unless-stopped
-
-networks:
-  p048s08k44sgg0gcw0cwssg4:
-    name: p048s08k44sgg0gcw0cwssg4
-    external: true
