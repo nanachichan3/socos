@@ -35,17 +35,26 @@ try {
 
 # ─── Step 2: Run prisma db push ────────────────────────────────────────────
 echo "[startup] Checking for prisma..."
-if [ -f "/app/node_modules/.bin/prisma" ]; then
+PRISMA_PATH=""
+if [ -f "/usr/local/bin/prisma" ]; then
+  PRISMA_PATH="/usr/local/bin/prisma"
+  echo "[startup] Found prisma at /usr/local/bin/prisma"
+elif [ -f "/app/node_modules/.bin/prisma" ]; then
+  PRISMA_PATH="/app/node_modules/.bin/prisma"
   echo "[startup] Found prisma at /app/node_modules/.bin/prisma"
-  echo "[startup] Running prisma db push..."
-  /app/node_modules/.bin/prisma db push --accept-data-loss --skip-generate || echo "[startup] prisma db push done"
 elif [ -f "/prod/api/node_modules/.bin/prisma" ]; then
+  PRISMA_PATH="/prod/api/node_modules/.bin/prisma"
   echo "[startup] Found prisma at /prod/api/node_modules/.bin/prisma"
-  echo "[startup] Running prisma db push..."
-  /prod/api/node_modules/.bin/prisma db push --accept-data-loss --skip-generate || echo "[startup] prisma db push done"
-else
-  echo "[startup] prisma not available, skipping db push"
-  ls -la /app/node_modules/.bin/ 2>/dev/null | head -10 || echo "[startup] /app/node_modules/.bin/ not found"
 fi
 
-echo "[startup] Done."
+if [ -n "$PRISMA_PATH" ]; then
+  echo "[startup] Running prisma db push..."
+  $PRISMA_PATH db push --accept-data-loss --skip-generate || echo "[startup] prisma db push done"
+else
+  echo "[startup] prisma not found. Checking what's available..."
+  ls -la /app/node_modules/.bin/ 2>/dev/null | head -20 || echo "[startup] /app/node_modules/.bin/ not found"
+  ls -la /usr/local/bin/prisma 2>/dev/null || echo "[startup] /usr/local/bin/prisma not found"
+fi
+
+echo "[startup] Done. Starting NestJS."
+exec node dist/main.js
