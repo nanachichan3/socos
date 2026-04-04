@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // When behind nginx reverse proxy, use relative path
 // The nginx server handles routing to the NestJS backend
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL + '/api'
+const API_BASE = process.env.API_INTERNAL_URL || 'http://localhost:3001'
 
 const HEADER_FILTER = ['host', 'connection', 'content-length', 'content-type'];
 
