@@ -40,6 +40,8 @@ services:
       - "traefik.http.services.api-swwcg80gkw4k0k4oco8w8wgw.loadbalancer.server.port=3001"
     expose:
       - "3001"
+    ports:
+      - "3010:3001"
     networks:
       - coolify
       - swwcg80gkw4k0k4oco8w8wgw
