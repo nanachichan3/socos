@@ -34,9 +34,11 @@ RUN pnpm build
 
 RUN pnpm --filter @socos/api deploy --prod --legacy /prod/api
 
-# Copy generated Prisma client into the deployed node_modules
+# Copy generated Prisma client and CLI into the deployed node_modules
 RUN cp -r /app/node_modules/.pnpm/@prisma+client*/node_modules/@prisma/client /prod/api/node_modules/@prisma/client
 RUN cp -r /app/node_modules/.pnpm/@prisma+client*/node_modules/.prisma /prod/api/node_modules/.prisma
+RUN cp -r /app/node_modules/.pnpm/prisma*/node_modules/.bin/prisma /prod/api/node_modules/.bin/prisma 2>/dev/null || true
+RUN cp /app/node_modules/.bin/prisma /prod/api/node_modules/.bin/prisma 2>/dev/null || true
 
 # ---- Stage 3: Production runner ----
 FROM node:22-alpine AS runner

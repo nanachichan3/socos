@@ -32,8 +32,12 @@ try {
 } catch(e) { console.error('[db-check] Parse error:', e.message); process.exit(0); }
 " || echo "[db-check] Node script failed"
 
-# ─── Step 2: Run prisma db push ───────────────────────────────────────────
-echo "[startup] Running prisma db push..."
-node node_modules/.bin/prisma db push --accept-data-loss --skip-generate || echo "[startup] prisma db push done"
+# ─── Step 2: Run prisma db push (if prisma is available) ──────────────────
+if [ -f "node_modules/.bin/prisma" ]; then
+  echo "[startup] Running prisma db push..."
+  node node_modules/.bin/prisma db push --accept-data-loss --skip-generate || echo "[startup] prisma db push done"
+else
+  echo "[startup] prisma not available, skipping db push"
+fi
 
 echo "[startup] Done."

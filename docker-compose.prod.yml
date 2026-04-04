@@ -1,27 +1,7 @@
 version: '3.8'
 
 services:
-  # Nginx reverse proxy - single entry point for all services
-  nginx:
-    image: nginx:1.27-alpine
-    ports:
-      - "${PROXY_PORT:-3000}:80"
-    volumes:
-      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - web
-      - api
-      - platform
-    networks:
-      - p048s08k44sgg0gcw0cwssg4
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  # Next.js Web App
+  # Next.js Web App - directly exposed
   web:
     build:
       context: .
@@ -31,10 +11,8 @@ services:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://socos.rachkovan.com}
     environment:
       - NODE_ENV=production
-      - API_INTERNAL_URL=http://api:3001
-      - PLATFORM_INTERNAL_URL=http://platform:8080
-    expose:
-      - "3000"
+    ports:
+      - "3000:3000"
     networks:
       - p048s08k44sgg0gcw0cwssg4
     restart: unless-stopped
@@ -52,20 +30,6 @@ services:
       - PORT=3001
     expose:
       - "3001"
-    networks:
-      - p048s08k44sgg0gcw0cwssg4
-    restart: unless-stopped
-
-  # React Platform - static SPA served by nginx
-  platform:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.frontend
-      args:
-        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-}
-        VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-}
-    expose:
-      - "8080"
     networks:
       - p048s08k44sgg0gcw0cwssg4
     restart: unless-stopped
