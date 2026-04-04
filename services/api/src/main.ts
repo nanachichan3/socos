@@ -23,7 +23,7 @@ async function ensureDatabase() {
     console.log('[db-init] Connecting to admin DB:', u.hostname + ':' + port + '/postgres');
     
     const { Client } = await import('pg');
-    const admin = new Client({ connectionString: adminUrl, connectionTimeoutMillis: 10000 });
+    const admin = new Client({ connectionString: adminUrl, connectionTimeoutMillis: 5000 });
     await admin.connect();
     
     const r = await admin.query("SELECT 1 FROM pg_database WHERE datname = 'socos'");
@@ -43,7 +43,7 @@ async function ensureDatabase() {
 
 async function bootstrap() {
   // Ensure the socos database exists before starting NestJS
-  await ensureDatabase();
+  ensureDatabase(); // fire-and-forget, don't block startup
   
   const app = await NestFactory.create(AppModule);
 
