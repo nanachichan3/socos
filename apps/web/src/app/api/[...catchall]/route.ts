@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// When behind nginx reverse proxy, use relative path
-// The nginx server handles routing to the NestJS backend
-const API_BASE = process.env.API_INTERNAL_URL || 'http://localhost:3001'
-
+const API_BASE = (process.env.API_INTERNAL_URL || 'http://localhost:3001').replace(/\/$/, '');
 const HEADER_FILTER = ['host', 'connection', 'content-length', 'content-type'];
 
 async function proxyRequest(
@@ -12,6 +9,8 @@ async function proxyRequest(
 ) {
   const { catchall } = await params;
   const path = catchall.join('/');
+  // NestJS uses setGlobalPrefix('api'), so include the prefix in the path
+  const apiPath = `api/${path}`;
   const url = new URL(request.url);
   const query = url.search;
   const headers: Record<string, string> = {};
@@ -20,7 +19,7 @@ async function proxyRequest(
   });
 
   try {
-    const res = await fetch(`${API_BASE}/${path}${query}`, {
+    const res = await fetch(`${API_BASE}/${apiPath}${query}`, {
       headers,
       credentials: 'include',
     });
@@ -47,13 +46,14 @@ export async function POST(
 ) {
   const { catchall } = await params;
   const path = catchall.join('/');
+  const apiPath = `api/${path}`;
   const headers: Record<string, string> = {};
   request.headers.forEach((v, k) => {
     if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
   });
   try {
     const body = await request.text();
-    const res = await fetch(`${API_BASE}/${path}`, {
+    const res = await fetch(`${API_BASE}/${apiPath}`, {
       method: 'POST',
       headers: { ...headers, 'Content-Type': headers['content-type'] || 'application/json' },
       body,
@@ -75,13 +75,14 @@ export async function PUT(
 ) {
   const { catchall } = await params;
   const path = catchall.join('/');
+  const apiPath = `api/${path}`;
   const headers: Record<string, string> = {};
   request.headers.forEach((v, k) => {
     if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
   });
   try {
     const body = await request.text();
-    const res = await fetch(`${API_BASE}/${path}`, {
+    const res = await fetch(`${API_BASE}/${apiPath}`, {
       method: 'PUT',
       headers: { ...headers, 'Content-Type': headers['content-type'] || 'application/json' },
       body,
@@ -103,12 +104,13 @@ export async function DELETE(
 ) {
   const { catchall } = await params;
   const path = catchall.join('/');
+  const apiPath = `api/${path}`;
   const headers: Record<string, string> = {};
   request.headers.forEach((v, k) => {
     if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
   });
   try {
-    const res = await fetch(`${API_BASE}/${path}`, {
+    const res = await fetch(`${API_BASE}/${apiPath}`, {
       method: 'DELETE',
       headers,
       credentials: 'include',
@@ -129,13 +131,14 @@ export async function PATCH(
 ) {
   const { catchall } = await params;
   const path = catchall.join('/');
+  const apiPath = `api/${path}`;
   const headers: Record<string, string> = {};
   request.headers.forEach((v, k) => {
     if (!HEADER_FILTER.includes(k.toLowerCase())) headers[k] = v;
   });
   try {
     const body = await request.text();
-    const res = await fetch(`${API_BASE}/${path}`, {
+    const res = await fetch(`${API_BASE}/${apiPath}`, {
       method: 'PATCH',
       headers: { ...headers, 'Content-Type': headers['content-type'] || 'application/json' },
       body,
