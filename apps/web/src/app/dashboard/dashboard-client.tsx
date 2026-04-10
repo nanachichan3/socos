@@ -43,6 +43,17 @@ interface Stats {
   levelName: string;
 }
 
+interface NewContactForm {
+  firstName: string;
+  lastName: string;
+  company: string;
+  jobTitle: string;
+  labels: string;
+  email: string;
+  phone: string;
+  birthday: string;
+}
+
 // ─── API Helpers ─────────────────────────────────────────────────────────────
 
 async function apiFetch(path: string, token: string, opts: RequestInit = {}) {
@@ -267,7 +278,15 @@ function AuthForm({ onLogin }: { onLogin: (token: string) => void }) {
 
 // ─── Contact Card ────────────────────────────────────────────────────────────
 
-function ContactCard({ contact, onClick }: { contact: Contact; onClick?: () => void }) {
+interface ContactCardProps {
+  contact: Contact;
+  onClick?: () => void;
+  onCall?: (contact: Contact) => void;
+  onMessage?: (contact: Contact) => void;
+  onReminder?: (contact: Contact) => void;
+}
+
+function ContactCard({ contact, onClick, onCall, onMessage, onReminder }: ContactCardProps) {
   const initials = `${contact.firstName[0]}${contact.lastName?.[0] || ''}`.toUpperCase();
   const labelColor: Record<string, string> = {
     'Student Network': 'bg-primary/10 text-primary',
@@ -321,13 +340,25 @@ function ContactCard({ contact, onClick }: { contact: Contact; onClick?: () => v
 
       {/* Hover quick actions */}
       <div className="absolute right-5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-        <button className="p-2 bg-surface-bright rounded-lg text-primary hover:bg-primary hover:text-on-primary transition-colors" title="Call">
+        <button 
+          onClick={(e) => { e.stopPropagation(); onCall?.(contact); }}
+          className="p-2 bg-surface-bright rounded-lg text-primary hover:bg-primary hover:text-on-primary transition-colors" 
+          title="Call"
+        >
           <Icon name="call" className="w-4 h-4" />
         </button>
-        <button className="p-2 bg-surface-bright rounded-lg text-primary hover:bg-primary hover:text-on-primary transition-colors" title="Message">
+        <button 
+          onClick={(e) => { e.stopPropagation(); onMessage?.(contact); }}
+          className="p-2 bg-surface-bright rounded-lg text-primary hover:bg-primary hover:text-on-primary transition-colors" 
+          title="Message"
+        >
           <Icon name="forum" className="w-4 h-4" />
         </button>
-        <button className="p-2 bg-surface-bright rounded-lg text-primary hover:bg-primary hover:text-on-primary transition-colors" title="Reminder">
+        <button 
+          onClick={(e) => { e.stopPropagation(); onReminder?.(contact); }}
+          className="p-2 bg-surface-bright rounded-lg text-primary hover:bg-primary hover:text-on-primary transition-colors" 
+          title="Reminder"
+        >
           <Icon name="alarm" className="w-4 h-4" />
         </button>
       </div>
@@ -371,6 +402,191 @@ function ReminderItem({ reminder }: { reminder: Reminder }) {
   );
 }
 
+// ─── Add Contact Modal ───────────────────────────────────────────────────────
+
+interface AddContactModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: (contact: Contact) => void;
+  token: string;
+}
+
+function AddContactModal({ isOpen, onClose, onSuccess, token }: AddContactModalProps) {
+  const [form, setForm] = useState<NewContactForm>({
+    firstName: '',
+    lastName: '',
+    company: '',
+    jobTitle: '',
+    labels: '',
+    email: '',
+    phone: '',
+    birthday: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.firstName.trim()) {
+      setError('First name is required');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const payload: any = {
+        firstName: form.firstName,
+        lastName: form.lastName || undefined,
+        company: form.company || undefined,
+        jobTitle: form.jobTitle || undefined,
+        labels: form.labels ? form.labels.split(',').map(l => l.trim()).filter(Boolean) : [],
+      };
+      if (form.birthday) {
+        payload.birthday = form.birthday;
+      }
+      const res = await apiFetch('/api/contacts', token, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      onSuccess(res);
+      onClose();
+      setForm({ firstName: '', lastName: '', company: '', jobTitle: '', labels: '', email: '', phone: '', birthday: '' });
+    } catch (err: any) {
+      setError(err.message || 'Failed to create contact');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-surface border border-outline-variant/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold" style={{ fontFamily: 'Manrope' }}>Add New Contact</h2>
+          <button onClick={onClose} className="p-2 hover:bg-surface-container-high rounded-lg transition-colors">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-on-surface-variant mb-1">First Name *</label>
+              <input
+                type="text"
+                value={form.firstName}
+                onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                className="w-full px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/10 text-sm text-on-surface focus:outline-none focus:border-primary"
+                placeholder="John"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-on-surface-variant mb-1">Last Name</label>
+              <input
+                type="text"
+                value={form.lastName}
+                onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                className="w-full px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/10 text-sm text-on-surface focus:outline-none focus:border-primary"
+                placeholder="Doe"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1">Company</label>
+            <input
+              type="text"
+              value={form.company}
+              onChange={e => setForm(f => ({ ...f, company: e.target.value }))}
+              className="w-full px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/10 text-sm text-on-surface focus:outline-none focus:border-primary"
+              placeholder="Acme Inc"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1">Job Title</label>
+            <input
+              type="text"
+              value={form.jobTitle}
+              onChange={e => setForm(f => ({ ...f, jobTitle: e.target.value }))}
+              className="w-full px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/10 text-sm text-on-surface focus:outline-none focus:border-primary"
+              placeholder="CEO"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1">Labels (comma-separated)</label>
+            <input
+              type="text"
+              value={form.labels}
+              onChange={e => setForm(f => ({ ...f, labels: e.target.value }))}
+              className="w-full px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/10 text-sm text-on-surface focus:outline-none focus:border-primary"
+              placeholder="Friend, Networking"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1">Birthday</label>
+            <input
+              type="date"
+              value={form.birthday}
+              onChange={e => setForm(f => ({ ...f, birthday: e.target.value }))}
+              className="w-full px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/10 text-sm text-on-surface focus:outline-none focus:border-primary"
+            />
+          </div>
+          {error && (
+            <div className="px-3 py-2 rounded-lg bg-error-container text-error text-sm">{error}</div>
+          )}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2 rounded-lg border border-outline-variant/10 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-2 rounded-lg bg-gradient-to-r from-primary to-primary-container text-on-primary text-sm font-bold hover:brightness-110 transition-all disabled:opacity-60"
+            >
+              {loading ? 'Creating...' : 'Create Contact'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Toast Notification ───────────────────────────────────────────────────────
+
+interface ToastProps {
+  message: string;
+  type: 'success' | 'error' | 'info';
+  onClose: () => void;
+}
+
+function Toast({ message, type, onClose }: ToastProps) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const colors = {
+    success: 'bg-secondary text-on-secondary',
+    error: 'bg-error text-on-error',
+    info: 'bg-primary text-on-primary',
+  };
+
+  return (
+    <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg ${colors[type]} font-medium text-sm animate-fade-in`}>
+      {message}
+    </div>
+  );
+}
+
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 
 function Dashboard({ token, onLogout }: { token: string; onLogout: () => void }) {
@@ -381,6 +597,77 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+  };
+
+  const handleContactCreated = (contact: Contact) => {
+    setContacts(prev => [contact, ...prev]);
+    showToast(`Contact "${contact.firstName}" created!`, 'success');
+    fetchAll();
+  };
+
+  const handleCall = async (contact: Contact) => {
+    showToast(`Calling ${contact.firstName}...`, 'info');
+    // Log interaction via /api/interactions endpoint
+    try {
+      await apiFetch('/api/interactions', token, {
+        method: 'POST',
+        body: JSON.stringify({ 
+          contactId: contact.id,
+          type: 'call', 
+          title: `Call with ${contact.firstName}` 
+        }),
+      });
+      showToast('Call logged!', 'success');
+      fetchAll();
+    } catch {
+      showToast('Could not log call', 'error');
+    }
+  };
+
+  const handleMessage = async (contact: Contact) => {
+    showToast(`Opening message for ${contact.firstName}...`, 'info');
+    // Log interaction via /api/interactions endpoint
+    try {
+      await apiFetch('/api/interactions', token, {
+        method: 'POST',
+        body: JSON.stringify({ 
+          contactId: contact.id,
+          type: 'message', 
+          title: `Message to ${contact.firstName}` 
+        }),
+      });
+      showToast('Message logged!', 'success');
+      fetchAll();
+    } catch {
+      showToast('Could not log message', 'error');
+    }
+  };
+
+  const handleReminder = async (contact: Contact) => {
+    showToast(`Creating reminder for ${contact.firstName}...`, 'info');
+    try {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      await apiFetch('/api/reminders', token, {
+        method: 'POST',
+        body: JSON.stringify({
+          contactId: contact.id,
+          title: `Check in with ${contact.firstName}`,
+          type: 'followup',
+          scheduledAt: tomorrow.toISOString(),
+        }),
+      });
+      showToast('Reminder created!', 'success');
+      fetchAll();
+    } catch {
+      showToast('Could not create reminder', 'error');
+    }
+  };
 
   const fetchAll = useCallback(async () => {
     try {
@@ -494,7 +781,10 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
               You have {stats?.totalContacts || 0} contacts • {reminders.length} upcoming reminders
             </p>
           </div>
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-sm hover:brightness-110 transition-all">
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-sm hover:brightness-110 transition-all"
+          >
             <Icon name="add" className="w-4 h-4" />
             Add Contact
           </button>
@@ -558,7 +848,15 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
               <p className="text-xs text-on-surface-variant/60 mt-1">Add your first contact to get started</p>
             </div>
           ) : (
-            filteredContacts.map(c => <ContactCard key={c.id} contact={c} />)
+            filteredContacts.map(c => (
+              <ContactCard 
+                key={c.id} 
+                contact={c} 
+                onCall={handleCall}
+                onMessage={handleMessage}
+                onReminder={handleReminder}
+              />
+            ))
           )}
         </div>
       </main>
@@ -626,6 +924,23 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           </div>
         </div>
       </aside>
+
+      {/* Add Contact Modal */}
+      <AddContactModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={handleContactCreated}
+        token={token}
+      />
+
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
