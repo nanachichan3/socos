@@ -295,8 +295,7 @@ function ContactCard({ contact, onClick, onCall, onMessage, onReminder }: Contac
 
   return (
     <div
-      onClick={onClick}
-      className="group relative bg-surface-container-low hover:bg-surface-container-high transition-all p-5 rounded-xl border border-transparent hover:border-outline-variant/10 cursor-pointer"
+      className="group relative bg-surface-container-low hover:bg-surface-container-high transition-all p-5 rounded-xl border border-transparent hover:border-outline-variant/10"
     >
       <div className="flex items-center gap-4">
         {/* Avatar */}
@@ -723,12 +722,18 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           {[
             { icon: 'dashboard', label: 'Dashboard', active: true },
             { icon: 'group', label: 'Contacts', active: false },
-            { icon: 'calendar', label: 'Calendar', active: false },
-            { icon: 'military_tech', label: 'Gamification', active: false },
-            { icon: 'settings', label: 'Settings', active: false },
+            { icon: 'calendar', label: 'Calendar', active: false, phase2: true },
+            { icon: 'military_tech', label: 'Gamification', active: false, phase2: true },
+            { icon: 'settings', label: 'Settings', active: false, phase2: true },
           ].map(item => (
-            <a key={item.label} href="#"
-              className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all ${
+            <button
+              key={item.label}
+              onClick={() => {
+                if (item.phase2) {
+                  showToast(`${item.label} coming in Phase 2`, 'info');
+                }
+              }}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all ${
                 item.active
                   ? 'bg-gradient-to-r from-primary to-primary-container text-on-primary'
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
@@ -736,21 +741,9 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             >
               <Icon name={item.icon} className="w-5 h-5" />
               {item.label}
-            </a>
+            </button>
           ))}
         </nav>
-
-        {/* AI Section */}
-        <div className="px-3 space-y-1 border-t border-outline-variant/10 pt-4 mt-4">
-          <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all">
-            <Icon name="lightbulb" className="w-5 h-5" />
-            AI Suggestions
-          </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all">
-            <Icon name="alarm" className="w-5 h-5" />
-            Reminders
-          </a>
-        </div>
 
         {/* User profile */}
         <div className="mt-auto px-4 pt-4 border-t border-outline-variant/10">
