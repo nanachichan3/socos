@@ -7,7 +7,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   transpilePackages: ['@socos/shared'],
   turbopack: {
     root: resolve(__dirname, '../..'),
