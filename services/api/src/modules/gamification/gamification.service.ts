@@ -47,7 +47,11 @@ export class GamificationService {
             interactions: true,
           },
         },
-        achievements: true,
+        achievements: {
+          include: {
+            achievement: true,
+          },
+        },
       },
     });
 
