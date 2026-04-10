@@ -42,15 +42,6 @@ services:
       - NODE_TLS_REJECT_UNAUTHORIZED=0
       - JWT_SECRET=${JWT_SECRET:-socos-dev-secret-2026}
       - PORT=3001
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.api-swwcg80gkw4k0k4oco8w8wgw.rule=Host(`socos.rachkovan.com`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.api-swwcg80gkw4k0k4oco8w8wgw.entryPoints=http"
-      - "traefik.http.services.api-swwcg80gkw4k0k4oco8w8wgw.loadbalancer.server.port=3001"
-      - "traefik.docker.network=coolify"
-      - "traefik.http.routers.api-swwcg80gkw4k0k4oco8w8wgw-https.rule=Host(`socos.rachkovan.com`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.api-swwcg80gkw4k0k4oco8w8wgw-https.entryPoints=https"
-      - "traefik.http.routers.api-swwcg80gkw4k0k4oco8w8wgw-https.tls=true"
     expose:
       - "3001"
     networks:
