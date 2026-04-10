@@ -47,6 +47,9 @@ async function bootstrap() {
   
   const app = await NestFactory.create(AppModule);
 
+  // Set global prefix for all routes (required for Traefik routing)
+  app.setGlobalPrefix('api');
+
   // Enable validation
   app.useGlobalPipes(
     new ValidationPipe({
