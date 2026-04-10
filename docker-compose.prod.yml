@@ -16,12 +16,16 @@ services:
       - "traefik.http.routers.web-swwcg80gkw4k0k4oco8w8wgw.rule=Host(`socos.rachkovan.com`)"
       - "traefik.http.routers.web-swwcg80gkw4k0k4oco8w8wgw.entryPoints=http"
       - "traefik.http.services.web-swwcg80gkw4k0k4oco8w8wgw.loadbalancer.server.port=3000"
+      - "traefik.docker.network=coolify"
+      - "traefik.http.routers.web-swwcg80gkw4k0k4oco8w8wgw-https.rule=Host(`socos.rachkovan.com`)"
+      - "traefik.http.routers.web-swwcg80gkw4k0k4oco8w8wgw-https.entryPoints=https"
+      - "traefik.http.routers.web-swwcg80gkw4k0k4oco8w8wgw-https.tls=true"
     ports:
       - "3000:3000"
     networks:
       - coolify
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health-check || exit 1"]
+      test: ["CMD-SHELL", "node -e \"const http=require('http');http.get('http://localhost:3000/api/health-check',(r)=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 5
