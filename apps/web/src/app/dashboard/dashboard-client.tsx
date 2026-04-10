@@ -612,14 +612,13 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 
   const handleCall = async (contact: Contact) => {
     showToast(`Calling ${contact.firstName}...`, 'info');
-    // Log interaction via /api/interactions endpoint
     try {
       console.log('[SOCOS] handleCall: contacting', contact.firstName, 'ID:', contact.id);
       await apiFetch('/api/interactions', token, {
         method: 'POST',
         body: JSON.stringify({ 
           contactId: contact.id,
-          type: 'CALL', // Backend expects uppercase enum value
+          type: 'call',
           title: `Call with ${contact.firstName}` 
         }),
       });
@@ -634,14 +633,13 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 
   const handleMessage = async (contact: Contact) => {
     showToast(`Opening message for ${contact.firstName}...`, 'info');
-    // Log interaction via /api/interactions endpoint
     try {
       console.log('[SOCOS] handleMessage: contacting', contact.firstName, 'ID:', contact.id);
       await apiFetch('/api/interactions', token, {
         method: 'POST',
         body: JSON.stringify({ 
           contactId: contact.id,
-          type: 'MESSAGE', // Backend expects uppercase enum value
+          type: 'message',
           title: `Message to ${contact.firstName}` 
         }),
       });
@@ -665,7 +663,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         body: JSON.stringify({
           contactId: contact.id,
           title: `Check in with ${contact.firstName}`,
-          type: 'FOLLOWUP', // Backend expects uppercase enum value
+          type: 'followup',
           scheduledAt: tomorrow.toISOString(),
         }),
       });

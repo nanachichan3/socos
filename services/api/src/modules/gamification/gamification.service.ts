@@ -53,7 +53,10 @@ export class GamificationService {
 
     if (!user) return newAchievements;
 
-    const existingAchievementIds = user.achievements.map((a) => a.achievementId);
+    // Get the achievement codes that user already has
+    const existingAchievementCodes = user.achievements
+      .map((ua) => ua.achievement?.code)
+      .filter((code): code is string => !!code);
 
     // Define achievements
     const achievements = [
@@ -65,7 +68,7 @@ export class GamificationService {
     ];
 
     for (const achievement of achievements) {
-      if (existingAchievementIds.includes(achievement.code)) continue;
+      if (existingAchievementCodes.includes(achievement.code)) continue;
 
       const count = user._count[achievement.type as keyof typeof user._count] || 0;
       
