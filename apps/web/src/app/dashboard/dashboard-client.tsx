@@ -614,17 +614,20 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     showToast(`Calling ${contact.firstName}...`, 'info');
     // Log interaction via /api/interactions endpoint
     try {
+      console.log('[SOCOS] handleCall: contacting', contact.firstName, 'ID:', contact.id);
       await apiFetch('/api/interactions', token, {
         method: 'POST',
         body: JSON.stringify({ 
           contactId: contact.id,
-          type: 'call', 
+          type: 'CALL', // Backend expects uppercase enum value
           title: `Call with ${contact.firstName}` 
         }),
       });
+      console.log('[SOCOS] handleCall: success for', contact.firstName);
       showToast('Call logged!', 'success');
       fetchAll();
-    } catch {
+    } catch (err) {
+      console.error('[SOCOS] handleCall error:', err);
       showToast('Could not log call', 'error');
     }
   };
@@ -633,17 +636,20 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     showToast(`Opening message for ${contact.firstName}...`, 'info');
     // Log interaction via /api/interactions endpoint
     try {
+      console.log('[SOCOS] handleMessage: contacting', contact.firstName, 'ID:', contact.id);
       await apiFetch('/api/interactions', token, {
         method: 'POST',
         body: JSON.stringify({ 
           contactId: contact.id,
-          type: 'message', 
+          type: 'MESSAGE', // Backend expects uppercase enum value
           title: `Message to ${contact.firstName}` 
         }),
       });
+      console.log('[SOCOS] handleMessage: success for', contact.firstName);
       showToast('Message logged!', 'success');
       fetchAll();
-    } catch {
+    } catch (err) {
+      console.error('[SOCOS] handleMessage error:', err);
       showToast('Could not log message', 'error');
     }
   };
@@ -653,18 +659,21 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     try {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
+      console.log('[SOCOS] handleReminder: creating for', contact.firstName, 'ID:', contact.id);
       await apiFetch('/api/reminders', token, {
         method: 'POST',
         body: JSON.stringify({
           contactId: contact.id,
           title: `Check in with ${contact.firstName}`,
-          type: 'followup',
+          type: 'FOLLOWUP', // Backend expects uppercase enum value
           scheduledAt: tomorrow.toISOString(),
         }),
       });
+      console.log('[SOCOS] handleReminder: success for', contact.firstName);
       showToast('Reminder created!', 'success');
       fetchAll();
-    } catch {
+    } catch (err) {
+      console.error('[SOCOS] handleReminder error:', err);
       showToast('Could not create reminder', 'error');
     }
   };
