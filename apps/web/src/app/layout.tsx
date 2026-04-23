@@ -1,5 +1,25 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { PostHogProvider } from '@posthog/react-server'
+
+// PostHog server-side initialization
+function PostHogInit() {
+  const posthogApiKey = process.env.POSTHOG_API_KEY
+  const posthogHost = process.env.POSTHOG_HOST || 'https://app.posthog.com'
+
+  if (posthogApiKey) {
+    return (
+      <PostHogProvider
+        apiKey={posthogApiKey}
+        apiHost={posthogHost}
+        person_profiles="identified_only"
+      >
+        {/* Child components will consume PostHog context */}
+      </PostHogProvider>
+    )
+  }
+  return null
+}
 
 export const metadata: Metadata = {
   title: 'SOCOS - Your Relationships, Leveled Up',
@@ -29,6 +49,7 @@ export default function RootLayout({
         />
       </head>
       <body className="dark bg-[#0b1326] text-[#dae2fd]">
+        <PostHogInit />
         {children}
       </body>
     </html>
