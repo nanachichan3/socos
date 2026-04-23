@@ -8,7 +8,7 @@ export class GamificationService {
 
   // XP rewards for different interaction types
   private readonly XP_REWARDS: Record<string, number> = {
-    [InteractionType.CALL]: 20,
+    [InteractionType.CALL]: 10,
     [InteractionType.MESSAGE]: 10,
     [InteractionType.MEETING]: 30,
     [InteractionType.NOTE]: 5,
