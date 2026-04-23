@@ -17,6 +17,9 @@ import { GamificationService } from './modules/gamification/gamification.service
 import { CelebrationsController } from './modules/celebrations/celebrations.controller.js';
 import { CelebrationsService } from './modules/celebrations/celebrations.service.js';
 import { DebugController } from './modules/debug/debug.controller.js';
+import { DungeonMasterController } from './modules/dungeon-master/dungeon-master.controller.js';
+import { DungeonMasterService } from './modules/dungeon-master/dungeon-master.service.js';
+import { AiDmService } from './modules/dungeon-master/ai-dm.service.js';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -29,6 +32,7 @@ import { DebugController } from './modules/debug/debug.controller.js';
     GamificationController,
     CelebrationsController,
     DebugController,
+    DungeonMasterController,
   ],
   providers: [
     PrismaService,
@@ -40,6 +44,8 @@ import { DebugController } from './modules/debug/debug.controller.js';
     RemindersService,
     GamificationService,
     CelebrationsService,
+    DungeonMasterService,
+    AiDmService,
   ],
 })
 export class AppModule {}

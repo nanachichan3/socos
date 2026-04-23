@@ -400,3 +400,55 @@ model Session {
   @@index([userId])
   @@index([token])
 }
+
+// ==================== DUNGEON MASTER ====================
+
+model DungeonMasterScenario {
+  id           String   @id @default(cuid())
+  name         String
+  archetype    String   // "mystery", "adventure", "intimate"
+  description  String
+  openingText  String   // AI prompt template for opening
+  scenes      Json     // Array of scene configs: [{ description, setting, expectedBeats }]
+  xpReward     Int      @default(100)
+  totalScenes  Int      @default(3)
+  createdAt    DateTime @default(now())
+
+  sessions     DMSession[]
+
+  @@index([archetype])
+}
+
+model DMSession {
+  id              String    @id @default(cuid())
+  scenarioId      String
+  scenario        DungeonMasterScenario @relation(fields: [scenarioId], references: [id])
+  participants    String[]  // array of user IDs (exactly 2 for MVP)
+  currentScene    Int       @default(0)
+  status          String    // "waiting" | "active" | "scene_submission" | "scene_review" | "debrief" | "completed" | "expired"
+  currentNarrative String?  // AI narration for current scene
+  startedAt       DateTime?
+  deadline        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  responses       DMSceneResponse[]
+
+  @@index([scenarioId])
+  @@index([status])
+  @@index([deadline])
+}
+
+model DMSceneResponse {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     DMSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId      String
+  sceneIndex  Int
+  content     String   // User's response text (max 300 chars)
+  submittedAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([userId])
+  @@unique([sessionId, userId, sceneIndex])
+}
