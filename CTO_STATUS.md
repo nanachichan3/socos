@@ -1,5 +1,5 @@
 # SOCOS CRM — CTO Status Report
-*Generated: 2026-04-24*
+*Generated: 2026-04-24 | Updated: 2026-04-24 16:30 UTC*
 
 ## Build Status
 
@@ -7,15 +7,18 @@
 |---------|--------|-------|
 | `@socos/platform` | ✅ Built | Vite build, 191KB JS |
 | `@socos/api` | ✅ Built | NestJS, Swagger enabled |
-| `@socos/web` | ❌ FAILED | `Module not found: Can't resolve '@posthog/react-server'` |
+| `@socos/web` | ✅ Built | Next.js, 110KB JS |
 
-**Root cause:** `layout.tsx` imports `@posthog/react-server` but this package is not installed. PostHog is an optional analytics dependency — the code wraps it in a conditional `PostHogInit()` that returns `null` when `POSTHOG_API_KEY` is absent, but Next.js still fails at compile time because the module can't be resolved.
+**2026-04-24 Fixes:**
+- Removed invalid `@posthog/react-server` dependency (package doesn't exist in npm registry)
+- Cleaned up `layout.tsx` PostHog code (was calling client component from server component — architecturally broken)
+- Fixed `posthog-js` version in platform from `^4.4.1` → `^1.371.4`
 
 ## What Works
 
 ### ✅ Completed / Functional
 - Landing page (`/`) renders correctly with hero, features, pricing, and navigation
-- Dashboard page (`/dashboard`) structure is in place with full component hierarchy
+- Dashboard page (`/dashboard`) — 8.5KB, 110KB JS
 - **Add Contact Modal** is fully implemented in `dashboard-client.tsx` (lines 404–951+)
   - Fields: firstName, lastName, company, jobTitle, labels, email, phone, birthday
   - Calls `POST /api/contacts` with Bearer token
@@ -28,19 +31,17 @@
 - E2E test scaffolding exists (Playwright + `dashboard.spec.ts`)
 
 ### ❌ Broken / Missing
-1. **Web build fails** — `@posthog/react-server` not installed (build-blocking)
-2. **No `.env` file** — no `DATABASE_URL`, no auth secrets, no PostHog key
-3. **Dashboard is client-only** (`'use client'`) but makes unauthenticated API calls — auth flow unclear
-4. **E2E tests not run** — Playwright config exists but tests haven't been executed
-5. **NextAuth.js** mentioned in spec but not yet wired to web app
+1. **No `.env` file** — no `DATABASE_URL`, no auth secrets
+2. **Auth controller is a stub** — `AuthController` returns placeholder responses
+3. **NextAuth.js** mentioned in spec but not wired to web app
+4. **Dashboard makes raw `Authorization: Bearer <token>` calls** — no visible login flow to obtain token
+5. **E2E tests not run** — Playwright config exists but tests haven't been executed
 
 ## API Endpoints Status
 
-Based on `services/api/src/modules/`:
-
 | Module | Status |
 |--------|--------|
-| `auth` | Defined |
+| `auth` | Stub (placeholder responses) |
 | `contacts` | Defined |
 | `celebrations` | Defined |
 | `gamification` | Defined |
@@ -49,37 +50,12 @@ Based on `services/api/src/modules/`:
 | `dungeon-master` | Defined |
 | `prisma` | Connected |
 
-All routes prefixed with `/api`. Swagger docs available at startup.
-
-## Top 3 Actionable Fixes
-
-### 1. Fix the web build — install missing PostHog dependency
-```bash
-cd /data/workspace/socos/apps/web
-pnpm add @posthog/react-server
-```
-Or conditionally remove the import from `layout.tsx` if analytics is not a priority.
-
-### 2. Create `.env` with required secrets
-```env
-DATABASE_URL="postgresql://postgres:<password>@<host>:5432/socos?sslmode=prefer"
-NEXTAUTH_SECRET="<random-secret>"
-NEXTAUTH_URL="http://localhost:3000"
-POSTHOG_API_KEY=""   # optional — leave blank to disable
-```
-
-### 3. Wire up NextAuth.js in the dashboard
-The dashboard makes raw `Authorization: Bearer <token>` calls but there's no visible login flow. NextAuth needs to be configured in `apps/web/` so users can authenticate and obtain a token before using the CRM.
-
----
-
 ## Immediate Next Steps (Priority Order)
 
-1. **[5 min]** Run `pnpm add @posthog/react-server` in `apps/web/` — unblocks the build
-2. **[10 min]** Create `.env` from `.env.example` (if it exists) or template above
-3. **[15 min]** Verify API starts: `cd services/api && pnpm start:dev`
-4. **[20 min]** Test Add Contact modal end-to-end (with auth wired)
-5. **[30 min]** Run `pnpm test` (e2e tests) once build is green
+1. **[5 min]** Create `services/api/.env` from `.env.example` with `DATABASE_URL`
+2. **[10 min]** Wire NextAuth.js to web app so users can authenticate
+3. **[20 min]** Test Add Contact modal end-to-end (with auth wired)
+4. **[30 min]** Run `pnpm test` (E2E tests) once build is green
 
 ---
 
