@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
 import { PrismaClient } from '@prisma/client';
 
 async function ensureDatabase() {
@@ -60,6 +61,9 @@ async function bootstrap() {
       },
     }),
   );
+
+  // Global exception filter — ensures HTTP exceptions return correct status codes (401, etc.)
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // Enable CORS
   app.enableCors();

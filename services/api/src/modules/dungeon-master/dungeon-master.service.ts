@@ -17,22 +17,22 @@ import {
   getNextState,
   isSessionExpired,
 } from './dm-state-machine.js';
-import { Interpreter } from 'xstate';
-import { assign } from 'xstate';
+import { createActor, assign } from 'xstate';
+import { Interpreter } from 'xstate';  // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // How long each scene window lasts (48 hours)
 const SCENE_DEADLINE_HOURS = 48;
 
 @Injectable()
 export class DungeonMasterService {
-  private actor: Interpreter<any>;
+  private actor: ReturnType<typeof createActor<any>>;
 
   constructor(
     private prisma: PrismaService,
     private aiDm: AiDmService,
   ) {
     // Initialize XState actor
-    this.actor = new Interpreter(dmSessionMachine);
+    this.actor = createActor(dmSessionMachine);
     this.actor.start();
   }
 
@@ -71,7 +71,7 @@ export class DungeonMasterService {
       throw new NotFoundException(`Scenario ${dto.scenarioId} not found.`);
     }
 
-    const session = await this.prisma.dMsession.create({
+    const session = await this.prisma.dMSession.create({
       data: {
         scenarioId: dto.scenarioId,
         participants: dto.participants,
@@ -95,7 +95,7 @@ export class DungeonMasterService {
    * Get session by ID. Checks for expiration.
    */
   async getSession(sessionId: string): Promise<DMSessionDto> {
-    const session = await this.prisma.dMsession.findUnique({
+    const session = await this.prisma.dMSession.findUnique({
       where: { id: sessionId },
       include: {
         scenario: true,
@@ -111,7 +111,7 @@ export class DungeonMasterService {
 
     // Check deadline-based expiration
     if (isSessionExpired(session.deadline) && session.status !== 'completed' && session.status !== 'expired') {
-      await this.prisma.dMsession.update({
+      await this.prisma.dMSession.update({
         where: { id: sessionId },
         data: { status: 'expired' },
       });
@@ -139,7 +139,7 @@ export class DungeonMasterService {
     // Generate AI narration for this scene
     const narrative = await this.generateSceneNarrative(session, session.currentScene);
 
-    const updated = await this.prisma.dMsession.update({
+    const updated = await this.prisma.dMSession.update({
       where: { id: sessionId },
       data: {
         status: 'scene_submission',
@@ -194,10 +194,10 @@ export class DungeonMasterService {
       },
     });
 
-    this.actor.send({ type: 'SUBMIT_RESPONSE', userId });
+    this.actor.send({ type: 'SUBMIT_RESPONSE', userId } as any);
 
     // Reload responses
-    const updated = await this.prisma.dMsession.findUnique({
+    const updated = await this.prisma.dMSession.findUnique({
       where: { id: sessionId },
       include: {
         scenario: true,
@@ -208,14 +208,14 @@ export class DungeonMasterService {
     // If both responded, advance to scene_review
     const allResponses = updated!.responses.filter((r) => r.sceneIndex === updated!.currentScene);
     if (allResponses.length >= 2) {
-      await this.prisma.dMsession.update({
+      await this.prisma.dMSession.update({
         where: { id: sessionId },
         data: { status: 'scene_review' },
       });
       this.actor.send({ type: 'REVIEW_SCENE' });
     }
 
-    const final = await this.prisma.dMsession.findUnique({
+    const final = await this.prisma.dMSession.findUnique({
       where: { id: sessionId },
       include: {
         scenario: true,
@@ -239,13 +239,13 @@ export class DungeonMasterService {
     const nextState = getNextState(session.currentScene, session.scenario.totalScenes);
 
     if (nextState === 'debrief') {
-      await this.prisma.dMsession.update({
+      await this.prisma.dMSession.update({
         where: { id: sessionId },
         data: { status: 'debrief', currentScene: session.currentScene + 1 },
       });
       this.actor.send({ type: 'BEGIN_DEBRIEF' });
     } else {
-      await this.prisma.dMsession.update({
+      await this.prisma.dMSession.update({
         where: { id: sessionId },
         data: {
           status: 'active',
@@ -256,7 +256,7 @@ export class DungeonMasterService {
       this.actor.send({ type: 'ADVANCE_SCENE' });
     }
 
-    const updated = await this.prisma.dMsession.findUnique({
+    const updated = await this.prisma.dMSession.findUnique({
       where: { id: sessionId },
       include: {
         scenario: true,
@@ -290,8 +290,8 @@ export class DungeonMasterService {
     // Get user profiles
     const [userAId, userBId] = session.participants;
     const [userA, userB] = await Promise.all([
-      this.prisma.user.findUnique({ where: { id: userAId }, select: { id: true, name: true, bio: true } }),
-      this.prisma.user.findUnique({ where: { id: userBId }, select: { id: true, name: true, bio: true } }),
+      this.prisma.user.findUnique({ where: { id: userAId }, select: { id: true, name: true } }),
+      this.prisma.user.findUnique({ where: { id: userBId }, select: { id: true, name: true } }),
     ]);
 
     if (!userA || !userB) {
@@ -334,7 +334,7 @@ export class DungeonMasterService {
     }
 
     // Mark session completed
-    await this.prisma.dMsession.update({
+    await this.prisma.dMSession.update({
       where: { id: sessionId },
       data: { status: 'completed' },
     });
@@ -355,8 +355,8 @@ export class DungeonMasterService {
 
     const [userAId, userBId] = session.participants;
     const [userA, userB] = await Promise.all([
-      this.prisma.user.findUnique({ where: { id: userAId }, select: { id: true, name: true, bio: true } }),
-      this.prisma.user.findUnique({ where: { id: userBId }, select: { id: true, name: true, bio: true } }),
+      this.prisma.user.findUnique({ where: { id: userAId }, select: { id: true, name: true } }),
+      this.prisma.user.findUnique({ where: { id: userBId }, select: { id: true, name: true } }),
     ]);
 
     if (!userA || !userB) {
@@ -403,7 +403,7 @@ export class DungeonMasterService {
           archetype: scenario.archetype,
           description: scenario.description,
           openingText: scenario.openingText,
-          scenes: scenario.scenes,
+          scenes: scenario.scenes as any,
           xpReward: scenario.xpReward,
           totalScenes: scenario.totalScenes,
         },

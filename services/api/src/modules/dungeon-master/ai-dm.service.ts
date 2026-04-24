@@ -57,8 +57,8 @@ Remember: you are a facilitator of connection, not a chatbot. Keep responses tig
       : `This is the opening scene. Introduce the setting, the mood, and what each user might observe or feel. Set the stage for their first response.`;
 
     return `CONTEXT:
-- ${userA.name ?? 'User A'}${userA.bio ? `, bio: "${userA.bio}"` : ''}
-- ${userB.name ?? 'User B'}${userB.bio ? `, bio: "${userB.bio}"` : ''}
+- ${userA.name ?? 'User A'}
+- ${userB.name ?? 'User B'}
 - Scenario: ${ctx.scenarioName} (${ctx.scenarioArchetype})
 - Setting: ${ctx.setting}
 
@@ -87,8 +87,8 @@ Narration (2-4 sentences):`;
     return `ROLE: You are an AI debrief narrator for a dating role-play session.
 
 THE PAIR:
-- ${userA.name ?? 'User A'}${userA.bio ? `, bio: "${userA.bio}"` : ''}
-- ${userB.name ?? 'User B'}${userB.bio ? `, bio: "${userB.bio}"` : ''}
+- ${userA.name ?? 'User A'}
+- ${userB.name ?? 'User B'}
 - Scenario: ${ctx.scenarioName}
 
 SESSION LOG:

@@ -218,4 +218,186 @@ Feature: API Security
   Scenario: Health check is public
     When I send GET /api/health-check
     Then I should receive 200 OK
+    And the response should include status: "ok", timestamp, and version
+
+  Scenario: Health check returns version
+    When I send GET /api/health-check
+    Then I should receive a response with version "0.1.0"
+```
+
+---
+
+## Gamification
+
+### US-09: XP earned from interactions
+
+```
+Feature: Gamification — XP System
+
+  Scenario: Earn XP when logging an interaction
+    Given I am authenticated on the dashboard
+    And I have a contact named "Sarah Chen"
+    When I log an interaction with "Sarah Chen"
+    Then I should earn +10 XP
+    And my XP total should increase
+    And my level should be recalculated
+
+  Scenario: Earn XP when creating a contact
+    Given I am authenticated on the dashboard
+    And my current XP is 100
+    When I create a new contact
+    Then I should earn +10 XP
+    And my XP total should be 110
+
+  Scenario: Level up after reaching XP threshold
+    Given I am authenticated on the dashboard
+    And my level is 1 with 490 XP (threshold for level 2 is 500)
+    When I earn 10 more XP
+    Then my level should become 2
+    And I should see a "Level Up!" toast notification
+```
+
+### US-10: Level progression
+
+```
+Feature: Gamification — Level System
+
+  Scenario: Level increases with XP
+    Given I am authenticated on the dashboard
+    And my current XP total is 450
+    When I earn enough XP to cross 500
+    Then my level should increase
+    And the XP progress bar should reset toward the next threshold
+
+  Scenario: XP threshold scales with level
+    Given I am at level 5
+    When I check the XP needed for next level
+    Then the threshold should be higher than at level 1
+```
+
+### US-11: Achievements
+
+```
+Feature: Gamification — Achievements
+
+  Scenario: Achievement unlocked for first contact
+    Given I am authenticated on the dashboard
+    And I have zero contacts
+    When I create my first contact
+    Then I should earn the "First Contact" achievement badge
+    And I should see a toast: "Achievement Unlocked: First Contact"
+
+
+  Scenario: Achievement for reaching level milestones
+    Given I am authenticated on the dashboard
+    When I reach level 5
+    Then I should earn the "Social Starter" achievement badge
+    And I should see a toast: "Achievement Unlocked: Social Starter"
+```
+
+### US-12: Streak tracking
+
+```
+Feature: Gamification — Streaks
+
+  Scenario: Streak increments on daily login
+    Given I am authenticated on the dashboard
+    And my current streak is 3 days
+    When I log in today
+    Then my streak should be 4 days
+
+  Scenario: Streak resets if day is missed
+    Given I am authenticated on the dashboard
+    And my current streak is 5 days
+    When I do not log in for 2 days
+    Then my streak should reset to 0
+```
+
+---
+
+## Toast Notifications
+
+### US-13: Toast feedback for user actions
+
+```
+Feature: Toast Notifications
+
+  Scenario: Success toast on contact creation
+    Given I am authenticated on the dashboard
+    When I create a new contact successfully
+    Then I should see a green success toast "Contact created!"
+
+  Scenario: Error toast on API failure
+    Given I am authenticated on the dashboard
+    When an API call fails
+    Then I should see a red error toast with the error message
+
+  Scenario: Toast auto-dismisses
+    Given I see a toast notification
+    When 3 seconds pass
+    Then the toast should disappear automatically
+
+  Scenario: Achievement toast
+    Given I earn an achievement
+    When the toast appears
+    Then it should show "Achievement Unlocked: [name]"
+    And it should be styled distinctly (gold/highlighted)
+
+
+  Scenario: Level up toast
+    Given I level up
+    When the toast appears
+    Then it should say "Level Up! You're now level N"
+```
+
+---
+
+## API Auth Flows (US-14, US-15)
+
+
+### US-14: Login endpoint behavior
+
+```
+Feature: Auth API
+
+  Scenario: POST /api/auth/login with valid credentials
+    Given a registered user with email "yev.rachkovan@gmail.com" and password "socos2026"
+    When I send POST /api/auth/login with valid credentials
+    Then I should receive 200 OK
+    And the response should include an accessToken
+    And the response should include user id, email, name, xp, level
+
+  Scenario: POST /api/auth/login with bad credentials returns 401
+    Given a registered user with email "yev.rachkovan@gmail.com" and password "socos2026"
+    When I send POST /api/auth/login with email "yev.rachkovan@gmail.com" and password "wrongpassword"
+    Then I should receive 401 Unauthorized
+    And the response should NOT include an accessToken
+
+  Scenario: POST /api/auth/login with non-existent user returns 401
+    When I send POST /api/auth/login with email "nobody@example.com" and password "anypassword"
+    Then I should receive 401 Unauthorized
+    And the response should NOT include an accessToken
+```
+
+### US-15: Contacts endpoint requires auth
+
+```
+Feature: Contacts API Security
+
+  Scenario: GET /api/contacts without Authorization header returns 401
+    Given I am not authenticated
+    When I send GET /api/contacts without an Authorization header
+    Then I should receive 401 Unauthorized
+    And the response should include an error message
+
+  Scenario: GET /api/contacts with invalid token returns 401
+    Given I am not authenticated
+    When I send GET /api/contacts with Authorization header "Bearer invalid_token"
+    Then I should receive 401 Unauthorized
+
+  Scenario: GET /api/contacts with valid token returns 200
+    Given I am authenticated with a valid token
+    When I send GET /api/contacts with my Authorization header
+    Then I should receive 200 OK
+    And the response should include my contacts list
 ```

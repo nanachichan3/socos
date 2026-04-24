@@ -106,12 +106,10 @@ export class ScenePromptContext {
   userA: {
     id: string;
     name: string | null;
-    bio: string | null;
   };
   userB: {
     id: string;
     name: string | null;
-    bio: string | null;
   };
   sceneIndex: number;
   totalScenes: number;

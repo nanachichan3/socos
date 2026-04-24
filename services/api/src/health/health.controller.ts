@@ -1,13 +1,16 @@
 import { Controller, Get } from '@nestjs/common';
 
-@Controller('health')
+const API_VERSION = '0.1.0';
+
+// Exposes GET /api/health-check
+@Controller('health-check')
 export class HealthController {
-  @Get('check')
-  check() {
+  @Get()
+  healthCheck() {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'SOCOS API',
+      version: API_VERSION,
     };
   }
 }

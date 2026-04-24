@@ -439,6 +439,8 @@ function AddContactModal({ isOpen, onClose, onSuccess, token }: AddContactModalP
         company: form.company || undefined,
         jobTitle: form.jobTitle || undefined,
         labels: form.labels ? form.labels.split(',').map(l => l.trim()).filter(Boolean) : [],
+        email: form.email || undefined,
+        phone: form.phone || undefined,
       };
       if (form.birthday) {
         payload.birthday = form.birthday;
@@ -523,6 +525,26 @@ function AddContactModal({ isOpen, onClose, onSuccess, token }: AddContactModalP
               onChange={e => setForm(f => ({ ...f, labels: e.target.value }))}
               className="w-full px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/10 text-sm text-on-surface focus:outline-none focus:border-primary"
               placeholder="Friend, Networking"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1">Email</label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              className="w-full px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/10 text-sm text-on-surface focus:outline-none focus:border-primary"
+              placeholder="john@example.com"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-on-surface-variant mb-1">Phone</label>
+            <input
+              type="tel"
+              value={form.phone}
+              onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+              className="w-full px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/10 text-sm text-on-surface focus:outline-none focus:border-primary"
+              placeholder="+1 234 567 8900"
             />
           </div>
           <div>

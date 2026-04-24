@@ -1,9 +1,9 @@
-# SOCOS MVP Spec — Core User Flows
+# SOCOS MVP Spec - Core User Flows
 
-**Project:** SOCOS CRM  
-**Stage:** MVP  
-**Updated:** 2026-04-23  
-**Status:** ✅ Authenticated, ⚠️ Add Contact, ✅ Stats, ✅ Toast
+**Project:** SOCOS CRM
+**Stage:** MVP
+**Updated:** 2026-04-24
+**Status:** ✅ Authenticated, ✅ Add Contact (fixed), ✅ Stats, ✅ Toast
 
 ---
 
@@ -35,7 +35,7 @@
 
 ---
 
-## 3. Add Contact Modal (🔴 BLOCKED — Bug)
+## 3. Add Contact Modal (🔴 BLOCKED - Bug)
 
 **Requirement:** Modal opens → user fills form → submits → contact created → success toast → modal closes → contact appears in list
 
@@ -51,12 +51,10 @@
 - The form sends optional email/phone as payload but they're not in the form UI
 - Contact creation may work but UI incomplete
 
-**Gap:** Email and phone fields exist in the `NewContactForm` interface but are not rendered in the modal JSX. Labels field is rendered but email/phone are missing.
-
-**Fix Required:**
-- Add email input field to modal form
-- Add phone input field to modal form  
-- OR clarify scope: MVP only captures name + labels (email/phone v2)
+**Fix Applied (2026-04-24):**
+- ✅ Added email input field to modal form (type=email, placeholder=john@example.com)
+- ✅ Added phone input field to modal form (type=tel, placeholder=+1 234 567 8900)
+- ✅ Payload now includes email and phone when provided
 
 ---
 
@@ -120,11 +118,11 @@
 
 ## Open Questions / Technical Debt
 
-1. **Add Contact modal missing email/phone fields** — confirm if these are MVP scope
-2. **Toast for API errors** — should error toast appear in dashboard or inline?
+1. **Add Contact modal missing email/phone fields** - confirm if these are MVP scope
+2. **Toast for API errors** - should error toast appear in dashboard or inline?
 3. **No e2e test coverage** for contact creation flow
-4. **Celebrations (birthdays)** — need celebration spec
-5. **Dungeon Master (RPG)** — DM module exists but not integrated in web UI
+4. **Celebrations (birthdays)** - need celebration spec
+5. **Dungeon Master (RPG)** - DM module exists but not integrated in web UI
 
 ---
 
