@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { CreateReminderDto, UpdateReminderDto, ReminderQueryDto } from './reminders.dto.js';
 
 @Injectable()
 export class RemindersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async create(userId: string, dto: CreateReminderDto) {
     // Verify contact belongs to user
@@ -33,6 +37,16 @@ export class RemindersService {
         },
       },
     });
+
+    // Send notification for birthday, anniversary, or followup reminders
+    if (['birthday', 'anniversary', 'followup'].includes(dto.type)) {
+      const contactName = `${reminder.contact.firstName}${reminder.contact.lastName ? ` ${reminder.contact.lastName}` : ''}`;
+      this.notificationsService.sendReminderNotification(userId, {
+        contactName,
+        type: dto.type as 'birthday' | 'anniversary' | 'followup',
+        date: new Date(dto.scheduledAt).toLocaleDateString(),
+      }).catch(err => console.error('Failed to send reminder notification:', err));
+    }
 
     return reminder;
   }
@@ -211,6 +225,16 @@ export class RemindersService {
         },
       },
     });
+
+    // Send celebration/achievement-style notification on completion
+    if (['birthday', 'anniversary', 'followup'].includes(reminder.type)) {
+      const contactName = `${updated.contact.firstName}${updated.contact.lastName ? ` ${updated.contact.lastName}` : ''}`;
+      this.notificationsService.sendReminderNotification(userId, {
+        contactName,
+        type: reminder.type as 'birthday' | 'anniversary' | 'followup',
+        message: 'Great job! You completed this reminder.',
+      }).catch(err => console.error('Failed to send completion notification:', err));
+    }
 
     return updated;
   }

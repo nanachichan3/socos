@@ -196,7 +196,80 @@ SOCOS has a solid architectural foundation: a proper monorepo with three service
 
 ---
 
-## 6. Project Structure Summary
+### AI Agent System — Phase 2 Implementation (Partially Complete)
+
+**Status:** ⚠️ Core infrastructure exists, LLM integration pending (Phase 3)
+
+The AI Agent system spans two co-existing NestJS modules in `services/api/src/modules/`:
+
+| Module | Path | Purpose | Stage |
+|--------|------|---------|-------|
+| `agents/` | `modules/agents/` | Older 5-strategy system: relationship, reminder, enrichment, summary, suggestion | ✅ Implemented |
+| `ai-agent/` | `modules/ai-agent/` | Newer unified dispatcher: 4 tools (suggestContacts, scheduleReminder, generateNote, assessRelationshipHealth) | ✅ Implemented |
+| `agent-tools/` | `modules/agent-tools/` | Re-exports combined tools for consumer modules | ✅ Implemented |
+
+#### Agents Module (5 Strategies)
+
+`AgentsService` in `agents.service.ts` is the orchestrator, routing requests to 5 strategy classes:
+
+| Strategy | File | Responsibility |
+|----------|-------|----------------|
+| `RelationshipAgent` | `strategies/relationship-agent.ts` | Score contacts by stale days, relationship score; return ranked list needing attention |
+| `ReminderAgent` | `strategies/reminder-agent.ts` | Compute upcoming birthday/stale/celebration reminders; sync celebrations to reminders |
+| `EnrichmentAgent` | `strategies/enrichment-agent.ts` | Framework for auto-filling contact info (stub for LinkedIn/Clearbit/Twitter APIs) |
+| `SummaryAgent` | `strategies/summary-agent.ts` | Generate interaction summaries and activity period reports (stub, LLM pending) |
+| `SuggestionAgent` | `strategies/suggestion-agent.ts` | Suggest new contacts to add based on interests/mutual connections |
+
+Each strategy is a standalone `@Injectable()` with its own Prisma access.
+
+
+**API endpoints** (`/api/agents/*`):
+- `GET /relationship` — ranked contact recommendations
+- `POST /relationship/refresh-scores` — recalculate all relationship scores
+- `GET /reminders/upcoming` — upcoming reminders
+- `GET /reminders/birthdays` — birthday reminder suggestions
+- `GET /reminders/stale` — stale contact reminders
+- `POST /reminders/sync-celebrations` — sync celebration dates to reminder records
+- `POST /enrich/:contactId` — enrich contact with external data
+- `POST /enrich/batch` — batch enrichment
+- `POST /enrich/:contactId/apply` — apply enrichment data to contact
+- `GET /summary/interaction/:id` — summarize single interaction
+- `GET /summary/contact/:contactId` — summarize contact history
+- `GET /summary/activity` — activity summary for week/month
+
+**Auth:** Uses `X-User-Id` header (stub auth) — JWT Bearer auth is NOT applied to these routes.
+
+#### AI Agent Dispatcher (Unified Tool Interface)
+
+`AiAgentController` (`POST /ai-agent/action`) provides a unified dispatcher with 4 tools:
+
+| Tool | Method | Description |
+|------|--------|-------------|
+| `suggestContacts` | `toolSuggestContacts()` | Score+rank contacts by stale days (0-40), birthday proximity (0-30), relationship score (0-30); return top N with human-readable reasons |
+| `scheduleReminder` | `toolScheduleReminder()` | Given a contact, compute reminder type (birthday/stale/followup/celebration), title, scheduledAt, recurrence rule |
+| `generateNote` | `toolGenerateNote()` | Generate re-connection note in message/email/meeting format; uses template rules with `// TODO: LLM` markers for real LLM integration |
+| `assessRelationshipHealth` | `toolAssessRelationshipHealth()` | Compute 0-100 health score with band (excellent/healthy/needs-attention/at-risk), insight, and 1 actionable recommendation |
+
+**Auth:** Bearer JWT via `Authorization: Bearer <token>` header.
+
+#### Phase 3: LLM Integration (TODO)
+
+The primary gap is real LLM integration. `generateNote` and `SummaryAgent` have `// TODO: LLM` markers showing where Anthropic/OpenAI calls should slot in:
+
+```ts
+// TODO: LLM integration -- replace the template below with an OpenAI/Anthropic call
+// const prompt = `Generate a ${tone} ${format} to reconnect with ${name}`;
+```
+
+**Required for Phase 3:**
+1. Wire `AiDmService` to real Anthropic API (already uses `Anthropic` SDK in `services/api/src/modules/dungeon-master/ai-dm.service.ts`)
+2. Extend `toolGenerateNote()` to call Anthropic with contact context + interaction history
+3. Extend `SummaryAgent` to call Anthropic for interaction + contact history summarization
+4. Add `AnthropicApiKey` to environment config
+
+---
+
+## 7. Project Structure Summary
 
 ```
 socos/

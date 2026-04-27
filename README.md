@@ -1,250 +1,173 @@
-# TypeScript Monorepo Boilerplate
+# SOCOS — Your Relationships, Leveled Up
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue.svg)](https://www.typescriptlang.org/)
-[![pnpm](https://img.shields.io/badge/pnpm-10.10.0-orange.svg)](https://pnpm.io/)
-[![Turborepo](https://img.shields.io/badge/Turborepo-1.13.3-blueviolet.svg)](https://turbo.build/)
+> **The personal CRM that treats relationships like the skill they are.**
+> Gamified. Agent-first. Self-hosted. Built for people who actually want to show up for the humans in their lives.
 
-A complete TypeScript monorepo template with Next.js, React (Vite), Nest.js, and shared packages. Includes Docker configurations, ESLint, TypeScript configs, and Turborepo setup.
+[![MIT License](https://img.shields.io/github/license/rachkovan/socos?style=flat-square)](LICENSE)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/rachkovan/socos/ci.yml?style=flat-square)](https://github.com/rachkovan/socos/actions)
+[![Open Issues](https://img.shields.io/github/issues-raw/rachkovan/socos?style=flat-square)](https://github.com/rachkovan/socos/issues)
+[![Stars](https://img.shields.io/github/stars/rachkovan/socos?style=flat-square)](https://github.com/rachkovan/socos/stargazers)
+[![Discord](https://img.shields.io/badge/Discord-SOCOS-blue?style=flat-square&logo=discord)](https://discord.gg/rachkovan)
 
-## 🎬 Getting Started
-
-### Clone and Set Up Your Repository
-
-```bash
-# Clone the repository
-git clone https://github.com/yevgeniusr/ts-monorepo-boilerplate.git your-project-name
-cd your-project-name
-
-# Remove the existing remote
-git remote remove origin
-
-# Add your own remote repository
-git remote add origin https://github.com/your-username/your-repo-name.git
-
-# (Optional) Push to your new remote
-git push -u origin main
-```
-
-## 🚀 Quick Start
-
-```bash
-# Install dependencies
-pnpm install
-
-# Start all apps in development mode
-pnpm dev
-
-# Build all packages
-pnpm build
-
-# Run linting
-pnpm lint
-
-# Run tests
-pnpm test
-```
-
-## 📁 Project Structure
-
-```
-ts-monorepo-boilerplate/
-├── apps/
-│   ├── nextjs-app/          # Next.js 14 application
-│   └── react-app/           # React + Vite application
-├── services/
-│   └── nestjs-service/      # Nest.js backend service
-├── packages/
-│   ├── shared-package/      # Shared TypeScript package
-│   ├── eslint-config/       # Shared ESLint configurations
-│   └── typescript-config/   # Shared TypeScript configurations
-├── configs/                 # Configuration templates
-│   ├── eslint/
-│   ├── typescript/
-│   └── prettier/
-├── docker/                  # Dockerfiles for deployment
-├── package.json             # Root package configuration
-├── turbo.json               # Turborepo pipeline config
-└── pnpm-workspace.yaml      # PNPM workspace config
-```
-
-## ✨ Features
-
-- **Next.js App** - Next.js 14 with TypeScript, Tailwind CSS, ESLint, and Vitest
-- **React App** - Vite-based React app with TypeScript, Tailwind CSS, ESLint, and Vitest
-- **Nest.js Service** - Complete Nest.js backend with TypeScript, Jest, and ESLint
-- **Shared Packages** - Reusable TypeScript packages for shared code
-- **Docker Support** - Dockerfiles for backend, Next.js, and Vite apps
-- **Code Quality** - ESLint, Prettier, and TypeScript configurations
-- **Build System** - Turborepo for optimized builds and caching
-
-## 🛠️ Available Scripts
-
-### Root Level
-
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start all apps/services in development mode |
-| `pnpm build` | Build all packages and apps |
-| `pnpm lint` | Lint all code |
-| `pnpm test` | Run all tests |
-| `pnpm type:check` | Type check all TypeScript code |
-| `pnpm format` | Format all code with Prettier |
-| `pnpm clean` | Clean all build artifacts |
-
-### App/Service Level
-
-Each app/service has its own scripts in their `package.json`:
-- `dev` - Development mode
-- `build` - Production build
-- `lint` - Lint code
-- `test` - Run tests
-- `type:check` - Type check
-
-## 🔧 Customization
-
-Before using this boilerplate, replace these placeholders throughout the codebase:
-
-### Keywords to Replace
-
-1. **`ts-monorepo-boilerplate`** → Your project name
-   - Used in: package names, workspace references, app titles
-   
-2. **`@ts-monorepo-boilerplate/*`** → Your package scope
-   - Used in: all package.json files, import statements
-   - Example: `@ts-monorepo-boilerplate/shared-package` → `@my-project/shared-package`
-
-3. **`TypeScript Monorepo Boilerplate`** → Your project description
-   - Used in: package.json descriptions
-
-4. **`yevgeniusr`** → Your name/username
-   - Used in: package.json author field
-
-### Quick Find & Replace
-
-Use your IDE's find-and-replace (case-sensitive) to replace:
-- `ts-monorepo-boilerplate` → `your-project-name`
-- `@ts-monorepo-boilerplate` → `@your-scope`
-- `TypeScript Monorepo Boilerplate` → `Your Project Description`
-- `yevgeniusr` → `Your Name`
-
-## 📦 Adding New Packages
-
-### Adding a New App
-
-1. Copy an existing app folder (e.g., `apps/nextjs-app/`)
-2. Rename it to your app name
-3. Update `package.json` with your app name
-4. Update import paths in `tsconfig.json` if needed
-
-### Adding a New Service
-
-1. Copy `services/nestjs-service/` to `services/your-service-name/`
-2. Update `package.json` with your service name
-3. Update Dockerfile if using (in `docker/` folder)
-
-### Adding a New Shared Package
-
-1. Copy `packages/shared-package/` to `packages/your-package-name/`
-2. Update `package.json` with your package name
-3. Update imports in apps/services that use this package
-
-## 🐳 Docker
-
-Dockerfiles are available in the `docker/` folder:
-
-- `Dockerfile.backend` - For Nest.js services
-- `Dockerfile.web` - For Next.js applications
-- `Dockerfile.frontend` - For Vite/React applications
-
-Update the Dockerfiles with your actual service/app names before use.
-
-## ⚙️ Configuration
-
-### ESLint
-
-ESLint configurations are provided for:
-- **Next.js apps** - Uses Vercel's style guide
-- **Services** - Node.js backend configuration
-- **Libraries** - Shared package configuration
-
-All configs extend from `@ts-monorepo-boilerplate/eslint-config`.
-
-### TypeScript
-
-TypeScript configurations are provided for:
-- **Base** - Common settings for all projects
-- **Next.js** - Next.js-specific settings
-- **Service** - Backend service settings
-- **Library** - Shared package settings
-
-### Turborepo
-
-The `turbo.json` includes pipelines for:
-- `build` - Builds all packages/apps/services
-- `lint` - Lints all code
-- `test` - Runs tests
-- `type:check` - Type checks TypeScript
-- `dev` - Development mode (no caching)
-- `clean` - Cleans build artifacts
-
-## 🐛 Troubleshooting
-
-### TypeScript Errors
-
-If you see TypeScript errors about missing types:
-1. Ensure `@ts-monorepo-boilerplate/typescript-config` is installed
-2. Check that `tsconfig.json` extends the correct config
-3. Run `pnpm install` to ensure all dependencies are linked
-
-### ESLint Errors
-
-If ESLint can't find configs:
-1. Ensure `@ts-monorepo-boilerplate/eslint-config` is installed
-2. Check that `.eslintrc.cjs` extends the correct config
-3. Verify the eslint-config package exports the right files
-
-### Build Errors
-
-If builds fail:
-1. Check that all workspace dependencies are installed
-2. Verify `pnpm-workspace.yaml` includes all package paths
-3. Ensure `turbo.json` pipeline is correctly configured
-
-## 📝 Best Practices
-
-1. **Always update placeholders** - Replace all boilerplate names with your project names
-2. **Keep configs in sync** - When updating shared configs, ensure all apps/services use them
-3. **Use workspace protocol** - Always use `workspace:*` for internal package dependencies
-4. **Test after setup** - Run `pnpm install` and `pnpm build` to verify everything works
-
-## 🎯 Next Steps
-
-After setting up your monorepo:
-
-1. ✅ Replace all placeholder names and keywords
-2. ✅ Add your application code to the respective app/service folders
-3. ✅ Configure environment variables (`.env` files)
-4. ✅ Set up CI/CD pipelines
-5. ✅ Configure deployment (Docker, Vercel, etc.)
-6. ✅ Add additional packages/services as needed
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details
-
-## 🔗 Tech Stack
-
-- **Package Manager**: pnpm 10.10.0
-- **Build System**: Turborepo 1.13.3
-- **Language**: TypeScript 5.4
-- **Frontend**: Next.js 14, React, Vite
-- **Backend**: Nest.js
-- **Styling**: Tailwind CSS
-- **Testing**: Vitest, Jest
-- **Linting**: ESLint, Prettier
-- **Docker**: Node 22 base images
+[🌐 socos.rachkovan.com](https://socos.rachkovan.com) · [🐙 GitHub](https://github.com/rachkovan/socos) · [📖 Docs](#)
 
 ---
 
-**Note**: This is a working boilerplate. You can use it as-is for testing, but remember to customize it for your project by replacing all placeholder values.
+## The Hook
+
+You meet someone great. You mean to stay in touch. Three months later you realize you have no idea what happened to them.
+
+SOCOS is the personal CRM that **actively works** to keep your relationships alive — not just a database you have to update manually. AI agents track who you should reconnect with, when, and why. You earn XP for showing up. Your relationships have levels. Streaks track your consistency.
+
+It's Notion for relationships meets a personal AI assistant — **self-hosted, privacy-first, and open source.**
+
+---
+
+## Why SOCOS?
+
+| | Monica | Twenty | **SOCOS** |
+|---|---|---|---|
+| AI Agents that proactively remind you | ❌ | ⚠️ Basic | ✅ Full automation |
+| Gamification (XP, levels, streaks) | ❌ | ❌ | ✅ Built in |
+| Built for individuals, not sales teams | ✅ | ❌ | ✅ |
+| API-first (built for agents) | ❌ | ⚠️ | ✅ |
+| Self-hosted | ✅ | ✅ | ✅ |
+| Birthday/celebration reminders | ⚠️ | ⚠️ | ✅ + lunar calendar support |
+
+SOCOS is the only personal CRM that combines **AI agents + gamification + full API access** in one self-hosted package. If you want a CRM that works *for* you — not just stores data — this is it.
+
+---
+
+## Quick Start
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/rachkovan/socos.git
+cd socos
+
+# 2. Install dependencies
+pnpm install
+
+# 3. Start everything with Docker (Postgres + API + Web)
+docker-compose up -d
+
+# 4. Open the app
+open http://localhost:3000
+```
+
+**That's it.** No external services, no API keys needed for local dev.
+
+For manual setup (without Docker), see [docs/QUICK_START.md](docs/QUICK_START.md).
+
+---
+
+## Tech Stack
+
+```
+Frontend   Next.js 14 (React, TypeScript)
+Backend    NestJS (Node.js, TypeScript)
+Database   PostgreSQL + Prisma ORM
+Auth       NextAuth.js
+AI/Agents  LangChain + OpenAI / Anthropic
+API        REST + GraphQL
+Infra      Docker, pnpm workspaces
+```
+
+---
+
+## Architecture
+
+```
+socos/
+├── apps/
+│   └── web/                 # Next.js 14 — the UI
+├── services/
+│   └── nestjs-service/     # NestJS — API & business logic
+├── packages/
+│   ├── database/           # Prisma schema + client
+│   ├── api-client/         # Typed API client for agents
+│   ├── ui/                 # Shared UI components
+│   └── agent-core/         # AI agent framework
+└── docker-compose.yaml     # One command to spin up everything
+```
+
+---
+
+## The AI Agent System
+
+SOCOS ships with agents that do the tedious work so you can do the human work.
+
+**Relationship Agent**
+> *"Hey, you haven't talked to Alex in 3 weeks. Want to send a quick note?"*
+
+**Reminder Agent**
+> *"Sarah's birthday is tomorrow. Want to set a reminder to call?"*
+
+**Enrichment Agent**
+> Auto-fills missing contact details from LinkedIn, Twitter, and public sources — keeps your contacts fresh without manual data entry.
+
+**Summary Agent**
+> Paste meeting notes → get a structured interaction log automatically.
+
+---
+
+## Gamification
+
+Every intentional action earns XP. Your relationships have a level. Your consistency has a streak.
+
+| Action | XP |
+|---|---|
+| Log a contact | +10 |
+| Log an interaction | +15 |
+| Complete reminder on time | +20 |
+| Maintain a 7-day streak | +50 |
+| Maintain a 30-day streak | +150 |
+| Unlock an achievement | +100 |
+
+**First achievements to unlock:**
+- 🌱 **First Contact** — Add your first contact
+- 🔥 **Streak Starter** — Complete reminders on time 3 days in a row
+- 🎯 **Active Networker** — Log 10 interactions in a week
+- 👑 **Relationship Master** — Maintain a 90-day streak
+
+The goal isn't a high score. The goal is a **longer streak** — meaning a more consistent, more intentional practice of showing up for people.
+
+---
+
+## Why Self-Hosted?
+
+Because your relationship data is some of the most personal data you have.
+
+When your CRM is a SaaS product, your relationship network becomes someone else's data asset. SOCOS runs on your infrastructure — your laptop, your server, your VPS. Your contacts, your notes, your history. No vendor lock-in. No data harvesting. MIT license.
+
+---
+
+## Contributing
+
+Contributions are welcome — bug reports, feature requests, docs, code.
+
+```bash
+# Run tests
+pnpm test
+
+# TypeScript type check
+pnpm type:check
+
+# Lint
+pnpm lint
+```
+
+Open an issue or PR on [GitHub](https://github.com/rachkovan/socos/issues). For major changes, please open an issue first to discuss what you'd like to change.
+
+See also: [CONTRIBUTING.md](CONTRIBUTING.md)
+
+---
+
+## License
+
+MIT — See [LICENSE](LICENSE)
+
+---
+
+**Built with intention for people who care about showing up.**
+[🌐 socos.rachkovan.com](https://socos.rachkovan.com)

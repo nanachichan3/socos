@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { GamificationService } from '../gamification/gamification.service.js';
 import { CreateContactDto, UpdateContactDto, ContactQueryDto } from './contacts.dto.js';
 
 @Injectable()
 export class ContactsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gamificationService: GamificationService,
+  ) {}
 
   async create(userId: string, dto: CreateContactDto) {
     // Get user's default vault
@@ -197,5 +201,127 @@ export class ContactsService {
     contacts.forEach((c) => c.tags.forEach((t) => tagSet.add(t)));
 
     return Array.from(tagSet);
+  }
+
+  async getDueContacts(userId: string, days = 14, limit = 20) {
+    const staleDate = new Date();
+    staleDate.setDate(staleDate.getDate() - days);
+
+    const contacts = await this.prisma.contact.findMany({
+      where: {
+        ownerId: userId,
+        OR: [
+          { lastContactedAt: { lt: staleDate } },
+          {
+            lastContactedAt: null,
+            createdAt: { lt: staleDate },
+          },
+        ],
+      },
+      take: limit,
+      orderBy: { lastContactedAt: 'asc' },
+      include: {
+        _count: {
+          select: { interactions: true },
+        },
+      },
+    });
+
+    return contacts.map((contact) => ({
+      ...contact,
+      daysSinceContact: contact.lastContactedAt
+        ? Math.floor((Date.now() - contact.lastContactedAt.getTime()) / (1000 * 60 * 60 * 24))
+        : Math.floor((Date.now() - contact.createdAt.getTime()) / (1000 * 60 * 60 * 24)),
+      socialLinks: contact.socialLinks ? JSON.parse(contact.socialLinks as string) : null,
+    }));
+  }
+
+  async createInteraction(userId: string, contactId: string, dto: any) {
+    // Verify contact belongs to user
+    const contact = await this.prisma.contact.findFirst({
+      where: { id: contactId, ownerId: userId },
+    });
+
+    if (!contact) {
+      throw new NotFoundException('Contact not found');
+    }
+
+    const xpEarned = await this.gamificationService.calculateInteractionXp(dto.type || 'note');
+
+    const interaction = await this.prisma.interaction.create({
+      data: {
+        contactId,
+        ownerId: userId,
+        type: dto.type || 'note',
+        title: dto.title,
+        content: dto.content,
+        summary: dto.summary,
+        occurredAt: dto.occurredAt ? new Date(dto.occurredAt) : new Date(),
+        duration: dto.duration,
+        location: dto.location,
+        xpEarned,
+      },
+      include: {
+        contact: {
+          select: { id: true, firstName: true, lastName: true, photo: true },
+        },
+      },
+    });
+
+    // Update user's XP
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        xp: { increment: xpEarned },
+        lastActiveAt: new Date(),
+      },
+    });
+
+    // Check for level up
+    const levelInfo = await this.gamificationService.checkLevelUp(userId, user.xp);
+
+    // Update contact's lastContactedAt
+    await this.prisma.contact.update({
+      where: { id: contactId },
+      data: { lastContactedAt: new Date() },
+    });
+
+    // Check for achievements
+    const newAchievements = await this.gamificationService.checkAchievements(userId);
+
+    return {
+      interaction: {
+        id: interaction.id,
+        type: interaction.type,
+        title: interaction.title,
+        occurredAt: interaction.occurredAt,
+        xpEarned: interaction.xpEarned,
+      },
+      user: {
+        xp: user.xp,
+        level: levelInfo.newLevel,
+        xpToNextLevel: levelInfo.xpForNextLevel,
+      },
+      newAchievements,
+    };
+  }
+
+  async getInteractions(userId: string, contactId: string, limit = 20) {
+    // Verify contact belongs to user
+    const contact = await this.prisma.contact.findFirst({
+      where: { id: contactId, ownerId: userId },
+    });
+
+    if (!contact) {
+      throw new NotFoundException('Contact not found');
+    }
+
+    const interactions = await this.prisma.interaction.findMany({
+      where: { contactId, ownerId: userId },
+      take: limit,
+      orderBy: { occurredAt: 'desc' },
+    });
+
+    return interactions;
   }
 }

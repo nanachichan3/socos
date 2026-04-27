@@ -68,4 +68,34 @@ export class ContactsController {
   ) {
     return this.contactsService.delete(req.user.userId, id);
   }
+
+  @Get('due')
+  @ApiOperation({ summary: 'Get contacts needing follow-up (stale contacts)' })
+  async getDueContacts(
+    @Request() req: { user: { userId: string } },
+    @Query('days') days?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.contactsService.getDueContacts(req.user.userId, days, limit);
+  }
+
+  @Post(':id/interactions')
+  @ApiOperation({ summary: 'Log an interaction for a contact' })
+  async createInteraction(
+    @Request() req: { user: { userId: string } },
+    @Param('id') contactId: string,
+    @Body() dto: any,
+  ) {
+    return this.contactsService.createInteraction(req.user.userId, contactId, dto);
+  }
+
+  @Get(':id/interactions')
+  @ApiOperation({ summary: 'Get interaction history for a contact' })
+  async getInteractions(
+    @Request() req: { user: { userId: string } },
+    @Param('id') contactId: string,
+    @Query('limit') limit?: number,
+  ) {
+    return this.contactsService.getInteractions(req.user.userId, contactId, limit);
+  }
 }

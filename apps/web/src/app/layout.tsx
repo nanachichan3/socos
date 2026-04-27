@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import Providers from '@/components/Providers'
 
 export const metadata: Metadata = {
   title: 'SOCOS - Your Relationships, Leveled Up',
@@ -29,7 +30,7 @@ export default function RootLayout({
         />
       </head>
       <body className="dark bg-[#0b1326] text-[#dae2fd]">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

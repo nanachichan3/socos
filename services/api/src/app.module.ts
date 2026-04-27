@@ -11,7 +11,7 @@ import { ContactsService } from './modules/contacts/contacts.service.js';
 import { InteractionsController } from './modules/interactions/interactions.controller.js';
 import { InteractionsService } from './modules/interactions/interactions.service.js';
 import { RemindersController } from './modules/reminders/reminders.controller.js';
-import { RemindersService } from './modules/reminders/reminders.service.js';
+import { RemindersModule } from './modules/reminders/reminders.module.js';
 import { GamificationController } from './modules/gamification/gamification.controller.js';
 import { GamificationService } from './modules/gamification/gamification.service.js';
 import { CelebrationsController } from './modules/celebrations/celebrations.controller.js';
@@ -20,9 +20,32 @@ import { DebugController } from './modules/debug/debug.controller.js';
 import { DungeonMasterController } from './modules/dungeon-master/dungeon-master.controller.js';
 import { DungeonMasterService } from './modules/dungeon-master/dungeon-master.service.js';
 import { AiDmService } from './modules/dungeon-master/ai-dm.service.js';
+import { AgentsModule } from './modules/agents/agents.module.js';
+import { AiAgentModule } from './modules/ai-agent/ai-agent.module.js';
+import { AgentToolsModule } from './modules/agent-tools/agent-tools.module.js';
+import { AgentsController } from './modules/agents/agents.controller.js';
+import { AiAgentController } from './modules/ai-agent/ai-agent.controller.js';
+import { AgentsService } from './modules/agents/agents.service.js';
+import { RelationshipAgent } from './modules/agents/strategies/relationship-agent.js';
+import { ReminderAgent } from './modules/agents/strategies/reminder-agent.js';
+import { EnrichmentAgent } from './modules/agents/strategies/enrichment-agent.js';
+import { SummaryAgent } from './modules/agents/strategies/summary-agent.js';
+import { SuggestionAgent } from './modules/agents/strategies/suggestion-agent.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
+import { NotificationsController } from './modules/notifications/notifications.controller.js';
+import { NotificationsService } from './modules/notifications/notifications.service.js';
+import { ResendEmailProvider } from './modules/notifications/providers/resend.provider.js';
+import { TwilioSmsProvider } from './modules/notifications/providers/twilio.provider.js';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true })],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AgentsModule,
+    NotificationsModule,
+    AiAgentModule,
+    RemindersModule,
+    AgentToolsModule,
+  ],
   controllers: [
     HealthController,
     AuthController,
@@ -33,6 +56,9 @@ import { AiDmService } from './modules/dungeon-master/ai-dm.service.js';
     CelebrationsController,
     DebugController,
     DungeonMasterController,
+    AgentsController,
+    AiAgentController,
+    NotificationsController,
   ],
   providers: [
     PrismaService,
@@ -41,11 +67,19 @@ import { AiDmService } from './modules/dungeon-master/ai-dm.service.js';
     AuthGuard,
     ContactsService,
     InteractionsService,
-    RemindersService,
     GamificationService,
     CelebrationsService,
     DungeonMasterService,
     AiDmService,
+    AgentsService,
+    RelationshipAgent,
+    ReminderAgent,
+    EnrichmentAgent,
+    SummaryAgent,
+    SuggestionAgent,
+    NotificationsService,
+    ResendEmailProvider,
+    TwilioSmsProvider,
   ],
 })
 export class AppModule {}

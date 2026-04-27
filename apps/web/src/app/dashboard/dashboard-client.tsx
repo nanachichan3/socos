@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { getToken, logout } from '@/lib/auth';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -56,14 +58,13 @@ interface NewContactForm {
 
 // ─── API Helpers ─────────────────────────────────────────────────────────────
 
-async function apiFetch(path: string, token: string, opts: RequestInit = {}) {
+async function apiFetch(path: string, opts: RequestInit = {}) {
+  const token = getToken();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
   const res = await fetch(path, {
     ...opts,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...opts.headers,
-    },
+    headers: { ...headers, ...opts.headers },
   });
   if (!res.ok) throw new Error(`${path} → ${res.status}`);
   return res.json();
@@ -150,127 +151,6 @@ function XpBar({ xp, level, xpProgress, xpNeeded }: { xp: number; level: number;
           className="h-full bg-secondary rounded-full xp-bar-glow transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
-      </div>
-    </div>
-  );
-}
-
-// ─── Auth Form ───────────────────────────────────────────────────────────────
-
-function AuthForm({ onLogin }: { onLogin: (token: string) => void }) {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('yev.rachkovan@gmail.com');
-  const [password, setPassword] = useState('socos2026');
-  const [name, setName] = useState('');
-  const [inviteCode, setInviteCode] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      let body: Record<string, string>;
-      if (isLogin) {
-        body = { email, password };
-      } else {
-        if (!inviteCode.trim()) {
-          throw new Error('Invite code is required to create an account');
-        }
-        body = { email, password, name, inviteCode };
-      }
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        throw new Error(d.message || 'Login failed');
-      }
-      const data = await res.json();
-      localStorage.setItem('socos_token', data.accessToken);
-      onLogin(data.accessToken);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-black tracking-tighter text-primary mb-1" style={{ fontFamily: 'Manrope, sans-serif' }}>
-            SOCOS
-          </h1>
-          <p className="text-sm text-on-surface-variant">Your relationships, leveled up.</p>
-        </div>
-
-        {/* Card */}
-        <div className="bg-surface-container-low border border-outline-variant/10 rounded-2xl p-8">
-          <h2 className="text-xl font-bold mb-6" style={{ fontFamily: 'Manrope' }}>
-            {isLogin ? 'Welcome back' : 'Create your account'}
-          </h2>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <input
-                type="text" placeholder="Your name" value={name}
-                onChange={e => setName(e.target.value)} required
-                className="w-full px-4 py-3 rounded-xl bg-surface-container-high border border-outline-variant/10 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary transition-colors"
-              />
-            )}
-            {!isLogin && (
-              <div className="relative">
-                <input
-                  type="text" placeholder="Invite code" value={inviteCode}
-                  onChange={e => setInviteCode(e.target.value)} required
-                  className="w-full px-4 py-3 rounded-xl bg-surface-container-high border border-outline-variant/10 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-tertiary transition-colors"
-                />
-                <p className="mt-1 text-[10px] text-tertiary/70">Ask Yev for an invite code to create an account</p>
-              </div>
-            )}
-            <input
-              type="email" placeholder="Email address" value={email}
-              onChange={e => setEmail(e.target.value)} required
-              className="w-full px-4 py-3 rounded-xl bg-surface-container-high border border-outline-variant/10 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary transition-colors"
-            />
-            <input
-              type="password" placeholder="Password" value={password}
-              onChange={e => setPassword(e.target.value)} required
-              className="w-full px-4 py-3 rounded-xl bg-surface-container-high border border-outline-variant/10 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary transition-colors"
-            />
-
-            {error && (
-              <div className="px-4 py-2 rounded-lg bg-error-container text-error text-sm">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-base hover:brightness-110 transition-all active:scale-[0.98] disabled:opacity-60"
-            >
-              {loading ? 'Signing in...' : isLogin ? 'Sign In' : 'Create Account'}
-            </button>
-          </form>
-
-          <p className="text-center mt-5 text-sm text-on-surface-variant">
-            {isLogin ? "Don't have an account?" : 'Already have one?'}{' '}
-            <button onClick={() => setIsLogin(!isLogin)} className="text-primary font-semibold hover:underline">
-              {isLogin ? 'Sign up' : 'Sign in'}
-            </button>
-          </p>
-        </div>
-
-        <p className="text-center mt-4 text-xs text-on-surface-variant/40 uppercase tracking-widest">
-          Privacy-first • Open Source • Agent Powered
-        </p>
       </div>
     </div>
   );
@@ -407,10 +287,9 @@ interface AddContactModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (contact: Contact) => void;
-  token: string;
 }
 
-function AddContactModal({ isOpen, onClose, onSuccess, token }: AddContactModalProps) {
+function AddContactModal({ isOpen, onClose, onSuccess }: AddContactModalProps) {
   const [form, setForm] = useState<NewContactForm>({
     firstName: '',
     lastName: '',
@@ -445,7 +324,7 @@ function AddContactModal({ isOpen, onClose, onSuccess, token }: AddContactModalP
       if (form.birthday) {
         payload.birthday = form.birthday;
       }
-      const res = await apiFetch('/api/contacts', token, {
+      const res = await apiFetch('/api/contacts', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
@@ -610,7 +489,7 @@ function Toast({ message, type, onClose }: ToastProps) {
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 
-function Dashboard({ token, onLogout }: { token: string; onLogout: () => void }) {
+function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [user, setUser] = useState<User | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -635,7 +514,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     showToast(`Calling ${contact.firstName}...`, 'info');
     try {
       console.log('[SOCOS] handleCall: contacting', contact.firstName, 'ID:', contact.id);
-      await apiFetch('/api/interactions', token, {
+      await apiFetch('/api/interactions', {
         method: 'POST',
         body: JSON.stringify({ 
           contactId: contact.id,
@@ -656,7 +535,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     showToast(`Opening message for ${contact.firstName}...`, 'info');
     try {
       console.log('[SOCOS] handleMessage: contacting', contact.firstName, 'ID:', contact.id);
-      await apiFetch('/api/interactions', token, {
+      await apiFetch('/api/interactions', {
         method: 'POST',
         body: JSON.stringify({ 
           contactId: contact.id,
@@ -679,7 +558,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       console.log('[SOCOS] handleReminder: creating for', contact.firstName, 'ID:', contact.id);
-      await apiFetch('/api/reminders', token, {
+      await apiFetch('/api/reminders', {
         method: 'POST',
         body: JSON.stringify({
           contactId: contact.id,
@@ -700,9 +579,9 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   const fetchAll = useCallback(async () => {
     try {
       const [statsData, contactsData, remindersData] = await Promise.all([
-        apiFetch('/api/gamification/stats', token).catch(() => null),
-        apiFetch('/api/contacts?limit=50', token).catch(() => null),
-        apiFetch('/api/reminders/upcoming', token).catch(() => null),
+        apiFetch('/api/gamification/stats').catch(() => null),
+        apiFetch('/api/contacts?limit=50').catch(() => null),
+        apiFetch('/api/reminders/upcoming').catch(() => null),
       ]);
       if (statsData?.user) setUser(statsData.user);
       if (statsData?.stats) setStats(statsData.stats);
@@ -713,7 +592,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -952,7 +831,6 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSuccess={handleContactCreated}
-        token={token}
       />
 
       {/* Toast notifications */}
@@ -970,19 +848,18 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 // ─── Root ────────────────────────────────────────────────────────────────────
 
 export default function DashboardClient() {
-  const [token, setToken] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const saved = localStorage.getItem('socos_token');
-    if (saved) setToken(saved);
-  }, []);
+    if (!getToken()) {
+      router.replace('/auth/login');
+    }
+  }, [router]);
 
-  function handleLogin(newToken: string) { setToken(newToken); }
-  function handleLogout() {
-    localStorage.removeItem('socos_token');
-    setToken(null);
+  async function handleLogout() {
+    await logout();
+    router.replace('/auth/login');
   }
 
-  if (!token) return <AuthForm onLogin={handleLogin} />;
-  return <Dashboard token={token} onLogout={handleLogout} />;
+  return <Dashboard onLogout={handleLogout} />;
 }

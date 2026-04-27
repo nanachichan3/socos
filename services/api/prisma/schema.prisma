@@ -10,25 +10,25 @@ datasource db {
 // ==================== USER ====================
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  avatar        String?
-  passwordHash  String?
-  xp            Int       @default(0)
-  level         Int       @default(1)
-  streakDays    Int       @default(0)
-  lastActiveAt  DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  avatar       String?
+  passwordHash String?
+  xp           Int       @default(0)
+  level        Int       @default(1)
+  streakDays   Int       @default(0)
+  lastActiveAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   // Relations
-  contacts      Contact[]
-  interactions  Interaction[]
-  reminders     Reminder[]
-  achievements  UserAchievement[]
-  vaults        Vault[]
-  sessions      Session[]
+  contacts     Contact[]
+  interactions Interaction[]
+  reminders    Reminder[]
+  achievements UserAchievement[]
+  vaults       Vault[]
+  sessions     Session[]
 }
 
 // ==================== VAULT ====================
@@ -62,37 +62,37 @@ model VaultMember {
 // ==================== CONTACT ====================
 
 model Contact {
-  id              String    @id @default(cuid())
-  vaultId         String
-  vault           Vault     @relation(fields: [vaultId], references: [id], onDelete: Cascade)
-  ownerId         String
-  owner           User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  id      String @id @default(cuid())
+  vaultId String
+  vault   Vault  @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   // Basic Info
-  firstName       String
-  lastName        String?
-  middleName      String?
-  nickname        String?
-  photo           String?
-  bio             String?
+  firstName  String
+  lastName   String?
+  middleName String?
+  nickname   String?
+  photo      String?
+  bio        String?
 
   // Work
-  company         String?
-  jobTitle        String?
+  company  String?
+  jobTitle String?
 
   // Important Dates
-  birthday        DateTime?
-  anniversary     DateTime?
+  birthday    DateTime?
+  anniversary DateTime?
 
   // Relationship Score (AI-calculated)
-  relationshipScore Int    @default(50) // 0-100
+  relationshipScore Int @default(50) // 0-100
 
   // Tags & Labels (JSON for flexibility)
-  labels          String[] @default([])
-  tags            String[] @default([])
+  labels String[] @default([])
+  tags   String[] @default([])
 
   // Social Links
-  socialLinks     Json?    // { linkedin, twitter, instagram, etc }
+  socialLinks Json? // { linkedin, twitter, instagram, etc }
 
   // Metadata
   firstMetDate    DateTime?
@@ -101,16 +101,16 @@ model Contact {
   nextReminderAt  DateTime?
 
   // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  interactions       Interaction[]
-  reminders          Reminder[]
-  contactFields      ContactField[]
-  tasks              Task[]
-  gifts              Gift[]
-  activities         Activity[]
+  interactions        Interaction[]
+  reminders           Reminder[]
+  contactFields       ContactField[]
+  tasks               Task[]
+  gifts               Gift[]
+  activities          Activity[]
   contactCelebrations ContactCelebration[]
 
   // Indexes
@@ -123,15 +123,15 @@ model Contact {
 // ==================== CONTACT FIELD ====================
 
 model ContactField {
-  id          String   @id @default(cuid())
-  contactId   String
-  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  type        String   // email, phone, address, website, etc
-  value       String
-  label       String?  // work, personal, etc
-  isPrimary   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  type      String // email, phone, address, website, etc
+  value     String
+  label     String? // work, personal, etc
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([contactId])
 }
@@ -139,31 +139,31 @@ model ContactField {
 // ==================== INTERACTION ====================
 
 model Interaction {
-  id          String    @id @default(cuid())
-  contactId   String
-  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  ownerId     String
-  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  ownerId   String
+  owner     User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   // Type
-  type        String    // call, message, meeting, note, email, social
+  type String // call, message, meeting, note, email, social
 
   // Content
-  title       String?
-  content     String?   // The actual note/content
-  summary     String?   // AI-generated summary
+  title   String?
+  content String? // The actual note/content
+  summary String? // AI-generated summary
 
   // Metadata
-  occurredAt  DateTime  @default(now())
-  duration    Int?      // in minutes, for calls/meetings
-  location    String?
+  occurredAt DateTime @default(now())
+  duration   Int? // in minutes, for calls/meetings
+  location   String?
 
   // Gamification
-  xpEarned    Int       @default(10)
+  xpEarned Int @default(10)
 
   // Timestamps
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([contactId])
   @@index([ownerId])
@@ -173,31 +173,31 @@ model Interaction {
 // ==================== REMINDER ====================
 
 model Reminder {
-  id            String    @id @default(cuid())
-  contactId     String
-  contact       Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  ownerId       String
-  owner         User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  ownerId   String
+  owner     User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   // Type
-  type          String    // birthday, followup, custom, anniversary
+  type String // birthday, followup, custom, anniversary
 
   // Schedule
-  title         String
-  description   String?
-  scheduledAt   DateTime
-  completedAt   DateTime?
+  title       String
+  description String?
+  scheduledAt DateTime
+  completedAt DateTime?
 
   // Repeat
-  repeatInterval String?  // daily, weekly, monthly, yearly
-  isRecurring   Boolean   @default(false)
+  repeatInterval String? // daily, weekly, monthly, yearly
+  isRecurring    Boolean @default(false)
 
   // Status
-  status        String    @default("pending") // pending, completed, skipped
+  status String @default("pending") // pending, completed, skipped
 
   // Timestamps
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([contactId])
   @@index([ownerId])
@@ -208,10 +208,10 @@ model Reminder {
 // ==================== TASK ====================
 
 model Task {
-  id          String    @id @default(cuid())
-  contactId   String?
-  contact     Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  ownerId     String
+  id        String   @id @default(cuid())
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  ownerId   String
 
   // Task Info
   title       String
@@ -233,27 +233,27 @@ model Task {
 // ==================== GIFT ====================
 
 model Gift {
-  id          String    @id @default(cuid())
-  contactId   String
-  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
   // Gift Info
   name        String
   description String?
-  price       Decimal?  @db.Decimal(10, 2)
+  price       Decimal? @db.Decimal(10, 2)
   url         String?
   imageUrl    String?
 
   // Status
-  status      String    @default("idea") // idea, purchased, given
-  givenAt     DateTime?
+  status  String    @default("idea") // idea, purchased, given
+  givenAt DateTime?
 
   // Occasion
-  occasion    String?   // birthday, christmas, anniversary, etc
+  occasion String? // birthday, christmas, anniversary, etc
 
   // Timestamps
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([contactId])
 }
@@ -261,18 +261,18 @@ model Gift {
 // ==================== ACHIEVEMENTS ====================
 
 model Achievement {
-  id          String    @id @default(cuid())
-  code        String    @unique // e.g., "first_contact", "streak_master"
+  id          String  @id @default(cuid())
+  code        String  @unique // e.g., "first_contact", "streak_master"
   name        String
   description String
-  icon        String?   // emoji or icon name
-  xpReward    Int       @default(100)
-  requirement Json      // { type: "count", target: 1, object: "contacts" }
+  icon        String? // emoji or icon name
+  xpReward    Int     @default(100)
+  requirement Json // { type: "count", target: 1, object: "contacts" }
 
   // Relations
-  unlockedBy  UserAchievement[]
+  unlockedBy UserAchievement[]
 
-  createdAt   DateTime  @default(now())
+  createdAt DateTime @default(now())
 }
 
 model UserAchievement {
@@ -290,10 +290,10 @@ model UserAchievement {
 // ==================== ACTIVITIES (Life Events) ====================
 
 model Activity {
-  id          String    @id @default(cuid())
-  contactId   String?
-  contact     Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  ownerId     String
+  id        String   @id @default(cuid())
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  ownerId   String
 
   // Activity Info
   title       String
@@ -301,11 +301,11 @@ model Activity {
   date        DateTime
 
   // Category
-  category    String    // birth, death, wedding, graduation, job_change, moved, etc
+  category String // birth, death, wedding, graduation, job_change, moved, etc
 
   // Timestamps
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([ownerId])
   @@index([contactId])
@@ -315,7 +315,7 @@ model Activity {
 
 model CelebrationPack {
   id          String   @id @default(cuid())
-  ownerId     String?  // null = system/default pack (available to all users)
+  ownerId     String? // null = system/default pack (available to all users)
   name        String
   description String?
   isDefault   Boolean  @default(false) // true for system packs
@@ -323,34 +323,35 @@ model CelebrationPack {
   updatedAt   DateTime @updatedAt
 
   celebrations Celebration[]
+
   @@index([ownerId])
 }
 
 // ==================== CELEBRATION ====================
 
 model Celebration {
-  id          String   @id @default(cuid())
-  packId      String
-  pack        CelebrationPack @relation(fields: [packId], references: [id], onDelete: Cascade)
-  ownerId     String?  // null = system/shared; if set, user owns their own copy
+  id      String          @id @default(cuid())
+  packId  String
+  pack    CelebrationPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  ownerId String? // null = system/shared; if set, user owns their own copy
 
   // Core fields
   name        String
   description String?
-  date        String   // MM-DD format (recurring annual date)
-  icon        String?  // emoji
+  date        String // MM-DD format (recurring annual date)
+  icon        String? // emoji
 
   // Optional: specific year date (for one-time events)
-  fullDate    DateTime? // YYYY-MM-DD for non-recurring
+  fullDate DateTime? // YYYY-MM-DD for non-recurring
 
   // Category
-  category    String   // religious, secular, cultural, personal
+  category String // religious, secular, cultural, personal
 
   // Calendar type: gregorian (fixed date), lunar (moves yearly), chinese (Chinese lunar calendar)
-  calendarType String  @default("gregorian")
+  calendarType String @default("gregorian")
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   contactCelebrations ContactCelebration[]
@@ -362,24 +363,27 @@ model Celebration {
 // ==================== CONTACT CELEBRATION (junction) ========================
 
 model ContactCelebration {
-  id            String   @id @default(cuid())
+  id            String      @id @default(cuid())
   contactId     String
-  contact       Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contact       Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
   celebrationId String
   celebration   Celebration @relation(fields: [celebrationId], references: [id], onDelete: Cascade)
-  ownerId       String   // needed for auth scoping
+  ownerId       String // needed for auth scoping
 
   // Override the celebration date for this contact (e.g. if their Buddhist birthday is different)
-  customDate    DateTime?
+  customDate DateTime?
 
   // Status: active = celebrate this for this contact, ignored = suppress
-  status        String   @default("active") // active, ignored
+  status String @default("active") // active, ignored
 
   // Whether to generate a reminder for this contact's celebration
-  shouldRemind  Boolean  @default(true)
+  shouldRemind Boolean @default(true)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  // Scheduled notification time (null = use default timing)
+  sendAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([contactId, celebrationId])
   @@index([contactId])
@@ -390,12 +394,12 @@ model ContactCelebration {
 // ==================== SESSIONS (Auth) ====================
 
 model Session {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token        String   @unique
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([token])
@@ -404,35 +408,35 @@ model Session {
 // ==================== DUNGEON MASTER ====================
 
 model DungeonMasterScenario {
-  id           String   @id @default(cuid())
-  name         String
-  archetype    String   // "mystery", "adventure", "intimate"
-  description  String
-  openingText  String   // AI prompt template for opening
-  scenes      Json     // Array of scene configs: [{ description, setting, expectedBeats }]
-  xpReward     Int      @default(100)
-  totalScenes  Int      @default(3)
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  name        String
+  archetype   String // "mystery", "adventure", "intimate"
+  description String
+  openingText String // AI prompt template for opening
+  scenes      Json // Array of scene configs: [{ description, setting, expectedBeats }]
+  xpReward    Int      @default(100)
+  totalScenes Int      @default(3)
+  createdAt   DateTime @default(now())
 
-  sessions     DMSession[]
+  sessions DMSession[]
 
   @@index([archetype])
 }
 
 model DMSession {
-  id              String    @id @default(cuid())
-  scenarioId      String
-  scenario        DungeonMasterScenario @relation(fields: [scenarioId], references: [id])
-  participants    String[]  // array of user IDs (exactly 2 for MVP)
-  currentScene    Int       @default(0)
-  status          String    // "waiting" | "active" | "scene_submission" | "scene_review" | "debrief" | "completed" | "expired"
-  currentNarrative String?  // AI narration for current scene
-  startedAt       DateTime?
-  deadline        DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id               String                @id @default(cuid())
+  scenarioId       String
+  scenario         DungeonMasterScenario @relation(fields: [scenarioId], references: [id])
+  participants     String[] // array of user IDs (exactly 2 for MVP)
+  currentScene     Int                   @default(0)
+  status           String // "waiting" | "active" | "scene_submission" | "scene_review" | "debrief" | "completed" | "expired"
+  currentNarrative String? // AI narration for current scene
+  startedAt        DateTime?
+  deadline         DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
 
-  responses       DMSceneResponse[]
+  responses DMSceneResponse[]
 
   @@index([scenarioId])
   @@index([status])
@@ -440,15 +444,15 @@ model DMSession {
 }
 
 model DMSceneResponse {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   sessionId   String
   session     DMSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   userId      String
   sceneIndex  Int
-  content     String   // User's response text (max 300 chars)
-  submittedAt DateTime @default(now())
+  content     String // User's response text (max 300 chars)
+  submittedAt DateTime  @default(now())
 
+  @@unique([sessionId, userId, sceneIndex])
   @@index([sessionId])
   @@index([userId])
-  @@unique([sessionId, userId, sceneIndex])
 }

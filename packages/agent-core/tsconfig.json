@@ -1,0 +1,9 @@
+{
+  "extends": "@socos/typescript-config/service.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*"]
+}

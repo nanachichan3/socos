@@ -30,24 +30,28 @@
     "clean": "rm -rf dist node_modules .turbo"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.91.1",
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.1.17",
     "@nestjs/platform-express": "^11.1.17",
     "@nestjs/swagger": "^11.1.17",
     "@prisma/client": "^6.9.0",
+    "@socos/agent-core": "workspace:*",
     "@socos/shared": "workspace:*",
+    "anthropic": "^0.0.0",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "lunar": "^2.0.0",
+    "openai": "^6.34.0",
     "pg": "^8.20.0",
+    "prisma": "^6.9.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "xstate": "^5.18.2",
-    "prisma": "^6.9.0"
+    "xstate": "^5.18.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.16",

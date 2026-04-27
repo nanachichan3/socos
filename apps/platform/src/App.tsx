@@ -1,26 +1,58 @@
-import { getSharedMessage } from '@socos/shared';
+import { useState, useEffect } from 'react';
+import { isAuthenticated, clearToken, getUser, type AuthUser } from './lib/auth.js';
+import Login from './pages/Login.js';
+import Signup from './pages/Signup.js';
+import Dashboard from './pages/Dashboard.js';
 
-/**
- * SOCOS Platform — Desktop Admin View
- * 
- * This is the React + Vite desktop application for SOCOS CRM.
- * The main dashboard and user features are in @socos/web (Next.js).
- * This platform app provides admin/advanced features.
- * 
- * TODO (Phase 2): Implement platform-specific features:
- * - Admin dashboard with user management
- * - Bulk contact operations
- * - Export/import functionality  
- * - Team management (vaults & sharing)
- * - Analytics & insights visualization
- */
+type View = 'login' | 'signup' | 'dashboard';
 
 function App() {
-  const sharedMessage = getSharedMessage();
+  const [view, setView] = useState<View>('login');
+  const [checked, setChecked] = useState(false);
 
+  useEffect(() => {
+    // Check auth status on mount
+    if (isAuthenticated()) {
+      setView('dashboard');
+    }
+    setChecked(true);
+  }, []);
+
+  function handleLoginSuccess() {
+    setView('dashboard');
+  }
+
+  function handleLogout() {
+    clearToken();
+    setView('login');
+  }
+
+  function switchToSignup() {
+    setView('signup');
+  }
+
+  function switchToLogin() {
+    setView('login');
+  }
+
+  // Prevent flash of content before auth check
+  if (!checked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+        <div className="text-slate-500">Loading…</div>
+      </div>
+    );
+  }
+
+  // Authenticated → dashboard
+  if (view === 'dashboard') {
+    return <Dashboard onLogout={handleLogout} />;
+  }
+
+  // Unauthenticated → login or signup
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-slate-950">
-      <div className="flex flex-col items-center gap-8 max-w-2xl text-center">
+      <div className="flex flex-col items-center gap-8 max-w-2xl text-center w-full">
         {/* SOCOS Branding */}
         <div className="flex flex-col items-center gap-4">
           <div className="text-6xl">🎮</div>
@@ -32,39 +64,17 @@ function App() {
           </p>
         </div>
 
-        {/* Status Card */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 w-full space-y-6">
-          <div className="flex items-center gap-3 text-slate-300">
-            <span className="text-2xl">⚡</span>
-            <span className="text-lg font-medium">Platform Status: In Development</span>
-          </div>
-
-          <div className="space-y-3 text-left">
-            <div className="flex items-center gap-3">
-              <span className="text-emerald-400">✓</span>
-              <span className="text-slate-300">Backend API running (NestJS + Prisma)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-emerald-400">✓</span>
-              <span className="text-slate-300">Web app operational (Next.js dashboard)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-amber-400">◐</span>
-              <span className="text-slate-300">Platform app — Phase 2 implementation</span>
-            </div>
-          </div>
-
-          <div className="border-t border-slate-800 pt-6 space-y-3">
-            <p className="text-slate-500 text-sm">
-              {sharedMessage}
-            </p>
-          </div>
-        </div>
+        {/* Auth Form */}
+        {view === 'login' ? (
+          <Login onSuccess={handleLoginSuccess} onSwitch={switchToSignup} />
+        ) : (
+          <Signup onSuccess={handleLoginSuccess} onSwitch={switchToLogin} />
+        )}
 
         {/* Quick Links */}
-        <div className="grid grid-cols-2 gap-4 w-full">
-          <a 
-            href="http://localhost:3000" 
+        <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+          <a
+            href="http://localhost:3000"
             className="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg p-4 text-left transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -75,8 +85,10 @@ function App() {
               </div>
             </div>
           </a>
-          <a 
-            href="http://localhost:3001/api" 
+          <a
+            href="http://localhost:3001/api"
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg p-4 text-left transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -87,37 +99,6 @@ function App() {
               </div>
             </div>
           </a>
-        </div>
-
-        {/* Phase 2 Features Preview */}
-        <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6 w-full">
-          <h3 className="text-lg font-medium text-slate-300 mb-4">Platform Features (Phase 2)</h3>
-          <div className="grid grid-cols-3 gap-4 text-sm text-slate-400">
-            <div className="flex flex-col items-center gap-2 p-3">
-              <span className="text-2xl">👥</span>
-              <span>User Management</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-3">
-              <span className="text-2xl">📊</span>
-              <span>Analytics</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-3">
-              <span className="text-2xl">💾</span>
-              <span>Export/Import</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-3">
-              <span className="text-2xl">🏘️</span>
-              <span>Team Vaults</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-3">
-              <span className="text-2xl">🤖</span>
-              <span>AI Agent Config</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-3">
-              <span className="text-2xl">🔔</span>
-              <span>Notifications</span>
-            </div>
-          </div>
         </div>
       </div>
     </main>

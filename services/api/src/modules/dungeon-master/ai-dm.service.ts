@@ -3,11 +3,14 @@
  *
  * Architecture: This service builds prompt strings for each archetype.
  * The actual AI call (Anthropic Claude) is wired through `callAI()` which
- * is a stub today and will be replaced with real integration in Phase 3.
+ * uses the Anthropic SDK to generate narration.
  *
  * Prompt structure follows Section 6 of the spec.
  */
 
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import Anthropic from '@anthropic-ai/sdk';
 import { ScenePromptContext } from './dungeon-master.dto.js';
 
 export type Archetype = 'mystery' | 'adventure' | 'intimate';
@@ -20,6 +23,17 @@ const ARCHETYPE_PERSONAS: Record<Archetype, string> = {
 };
 
 export class AiDmService {
+  private readonly anthropic: Anthropic;
+
+  constructor(private readonly configService: ConfigService) {
+    const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
+    if (apiKey) {
+      this.anthropic = new Anthropic({ apiKey });
+    } else {
+      this.anthropic = null as any;
+    }
+  }
+
   /**
    * Build the full system prompt for an archetype.
    */
@@ -117,23 +131,38 @@ Guidelines:
   }
 
   /**
-   * Stub for calling the AI.
-   * Replace with real Anthropic integration in Phase 3.
+   * Call the Anthropic Claude API to generate narration.
+   * Falls back to mock responses when ANTHROPIC_API_KEY is not configured.
    *
    * Returns the raw text response from the AI.
    */
   async callAI(prompt: string): Promise<string> {
-    // In Phase 3, this will be:
-    //   const response = await anthropic.messages.create({
-    //     model: 'claude-3-5-sonnet',
-    //     max_tokens: 500,
-    //     messages: [{ role: 'user', content: prompt }],
-    //   });
-    //   return response.content[0].text;
+    const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
 
-    // For Phase 1, return a formatted mock response so the API works end-to-end.
-    console.log('[AiDmService] callAI called (stub mode). Prompt length:', prompt.length);
+    // Fall back to mock responses when no API key is configured
+    if (!apiKey) {
+      console.log('[AiDmService] callAI called (stub mode — no ANTHROPIC_API_KEY). Prompt length:', prompt.length);
+      return this.mockCallAI(prompt);
+    }
 
+    try {
+      const client = new Anthropic({ apiKey });
+      const response = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      return response.content[0].type === 'text' ? response.content[0].text : '';
+    } catch (error) {
+      console.error('[AiDmService] Anthropic API error:', error instanceof Error ? error.message : error);
+      return this.mockCallAI(prompt);
+    }
+  }
+
+  /**
+   * Mock response generator for development/fallback.
+   */
+  private mockCallAI(prompt: string): string {
     if (prompt.includes('DEBRIEF FORMAT')) {
       return JSON.stringify({
         narrative: 'The evening unfolded like a scene from a classic film — two strangers navigating unexpected circumstances, discovering that the best connections often come without a script. What began as polite curiosity became something genuine: a shared laugh at an inopportune moment, a story traded at just the right time, the realization that ease had replaced awkwardness. By the end, something had shifted. Neither of you planned it. Both of you felt it.',
@@ -149,7 +178,7 @@ Guidelines:
       });
     }
 
-    if (prompt.includes('SCENE 1 of') || prompt.includes('SCENE 1 of')) {
+    if (prompt.includes('SCENE 1 of')) {
       return `The evening light spills golden through tall windows as you take in the room around you. Something about the space feels charged — full of possibility, full of the quiet electricity that comes before something shifts. You catch each other's eye across the room. There's no turning back now. What do you do?`;
     }
 
