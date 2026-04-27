@@ -9,7 +9,7 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../prisma/prisma.service.js";
 import { JwtService } from "../jwt/jwt.service.js";
-import Anthropic from "@anthropic-ai/sdk";
+import { LlmService } from "../llm/llm.service.js";
 import {
   AiAgentAction,
   AiAgentActionResponse,
@@ -38,30 +38,12 @@ export class AiAgentService {
   ) {}
 
   /**
-   * Call Anthropic Claude API with a prompt.
-   * Falls back to null response when ANTHROPIC_API_KEY is not configured.
-   * Consistent pattern with AiDmService.callAI().
+   * Call LLM via OpenRouter with a prompt.
+   * Falls back to null response when OPENROUTER_API_KEY is not configured.
    */
-  private async callAnthropic(prompt: string, maxTokens = 512): Promise<string | null> {
-    const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
-
-    if (!apiKey) {
-      console.log('[AiAgentService] callAnthropic (stub — no ANTHROPIC_API_KEY). Prompt length:', prompt.length);
-      return null;
-    }
-
-    try {
-      const client = new Anthropic({ apiKey });
-      const response = await client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: maxTokens,
-        messages: [{ role: 'user', content: prompt }],
-      });
-      return response.content[0].type === 'text' ? response.content[0].text.trim() : null;
-    } catch (error) {
-      console.error('[AiAgentService] Anthropic API error:', error instanceof Error ? error.message : error);
-      return null;
-    }
+  private async callLlm(prompt: string, maxTokens = 512): Promise<string | null> {
+    const llm = new LlmService(this.configService);
+    return llm.complete(prompt, { maxTokens });
   }
 
   async dispatch(
@@ -222,7 +204,7 @@ export class AiAgentService {
 Contacts:\n${contactsForLLM}
 
 Respond with one reason per line, numbered to match. Do NOT add any prefix or commentary — just the reasons.`;
-        const llmResult = await this.callAnthropic(llmPrompt, 600);
+        const llmResult = await this.callLlm(llmPrompt, 600);
         if (llmResult) {
           const lines = llmResult.split('\n').filter(l => /^\d+\./.test(l.trim()));
           lines.forEach((line, i) => {
@@ -387,29 +369,25 @@ ${format === 'email' ? 'Start with a Subject: line, then the body.' : ''}
 ${format === 'meeting' ? 'Include talking points as a JSON array of strings.' : ''}
 Do NOT use generic templates — make it specific to this person and context.`;
 
-    const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
+    const llm = new LlmService(this.configService);
     let content = '';
     let subject: string | undefined;
     let talkingPoints: string[] | undefined;
 
-    if (apiKey) {
+    if (llm.isConfigured) {
       try {
-        const client = new Anthropic({ apiKey });
-        const response = await client.messages.create({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1024,
-          messages: [{ role: 'user', content: prompt }],
-        });
-        const raw: string = response.content[0].type === 'text' ? response.content[0].text : '';
-        if (format === 'email') {
-          const subjectMatch = raw.match(/^Subject:\s*(.+)$/m);
-          if (subjectMatch) subject = subjectMatch[1].trim();
-          content = raw.replace(/^Subject:\s*.+$/m, '').trim();
-        } else {
-          content = raw;
+        const raw = await llm.complete(prompt, { maxTokens: 1024 });
+        if (raw) {
+          if (format === 'email') {
+            const subjectMatch = raw.match(/^Subject:\s*(.+)$/m);
+            if (subjectMatch) subject = subjectMatch[1].trim();
+            content = raw.replace(/^Subject:\s*.+$/m, '').trim();
+          } else {
+            content = raw;
+          }
         }
       } catch (error) {
-        console.error('[AiAgentService] Anthropic error in toolGenerateNote:', error instanceof Error ? error.message : error);
+        console.error('[AiAgentService] LLM error in toolGenerateNote:', error instanceof Error ? error.message : error);
       }
     }
 
@@ -571,7 +549,7 @@ Write a 1-sentence insight about this relationship's current state, then a 1-sen
 Respond in this format:
 INSIGHT: <insight>
 RECOMMENDATION: <recommendation>`;
-      const llmResult = await this.callAnthropic(llmPrompt, 300);
+      const llmResult = await this.callLlm(llmPrompt, 300);
       if (llmResult) {
         const insightMatch = llmResult.match(/^INSIGHT:\s*(.+)$/m);
         const recMatch = llmResult.match(/^RECOMMENDATION:\s*(.+)$/m);

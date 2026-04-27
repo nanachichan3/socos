@@ -12,7 +12,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import Anthropic from '@anthropic-ai/sdk';
+import { LlmService } from '../../llm/llm.service.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AgentContext, AgentResult, SummaryResult } from '../agents/types.js';
 
@@ -322,7 +322,7 @@ export class SummaryAgent {
   }
 
   /**
-   * LLM-powered single interaction summary using Anthropic Claude.
+   * LLM-powered single interaction summary via OpenRouter.
    * Falls back to template-based summary when API key is not configured.
    */
   private async llmSummarizeInteraction(
@@ -330,9 +330,13 @@ export class SummaryAgent {
     type: string,
     contactName: string,
   ): Promise<string> {
-    const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
+    if (!content) {
+      return this.generateSimpleSummary(content, type);
+    }
 
-    if (!apiKey || !content) {
+    const llm = new LlmService(this.configService);
+
+    if (!llm.isConfigured) {
       return this.generateSimpleSummary(content, type);
     }
 
@@ -345,21 +349,16 @@ Content: "${content}"
 Provide a concise, human-readable summary suitable for a personal CRM.`;
 
     try {
-      const client = new Anthropic({ apiKey });
-      const response = await client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 512,
-        messages: [{ role: 'user', content: prompt }],
-      });
-      return response.content[0].type === 'text' ? response.content[0].text : this.generateSimpleSummary(content, type);
+      const result = await llm.complete(prompt, { maxTokens: 512 });
+      return result ?? this.generateSimpleSummary(content, type);
     } catch (error) {
-      console.error('[SummaryAgent] Anthropic error:', error instanceof Error ? error.message : error);
+      console.error('[SummaryAgent] LLM error:', error instanceof Error ? error.message : error);
       return this.generateSimpleSummary(content, type);
     }
   }
 
   /**
-   * LLM-powered contact history summary using Anthropic Claude.
+   * LLM-powered contact history summary via OpenRouter.
    * Falls back to template-based summary when API key is not configured.
    */
   private async llmSummarizeContact(
@@ -368,10 +367,15 @@ Provide a concise, human-readable summary suitable for a personal CRM.`;
     contact: { firstName: string; lastName?: string | null },
     daysBack: number,
   ): Promise<string> {
-    const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
     const name = `${contact.firstName}${contact.lastName ? ` ${contact.lastName}` : ''}`;
 
-    if (!apiKey || !allContent) {
+    if (!allContent) {
+      return this.generateContactSummary(contact, interactions, daysBack);
+    }
+
+    const llm = new LlmService(this.configService);
+
+    if (!llm.isConfigured) {
       return this.generateContactSummary(contact, interactions, daysBack);
     }
 
@@ -398,15 +402,10 @@ Write a 2-3 paragraph summary that:
 Keep it personal and warm, suitable for a CRM.`;
 
     try {
-      const client = new Anthropic({ apiKey });
-      const response = await client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 768,
-        messages: [{ role: 'user', content: prompt }],
-      });
-      return response.content[0].type === 'text' ? response.content[0].text : this.generateContactSummary(contact, interactions, daysBack);
+      const result = await llm.complete(prompt, { maxTokens: 768 });
+      return result ?? this.generateContactSummary(contact, interactions, daysBack);
     } catch (error) {
-      console.error('[SummaryAgent] Anthropic contact summary error:', error instanceof Error ? error.message : error);
+      console.error('[SummaryAgent] LLM contact summary error:', error instanceof Error ? error.message : error);
       return this.generateContactSummary(contact, interactions, daysBack);
     }
   }

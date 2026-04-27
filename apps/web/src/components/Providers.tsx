@@ -1,7 +1,7 @@
 'use client';
 
-// No-op providers component since auth is handled via localStorage.
-// Kept as a placeholder for future providers (analytics, etc.)
+import { AuthProvider } from '@/lib/auth-context';
+
 export default function Providers({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <AuthProvider>{children}</AuthProvider>;
 }

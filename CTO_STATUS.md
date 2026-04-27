@@ -1,5 +1,5 @@
 # SOCOS CRM — CTO Status Report
-*Generated: 2026-04-25 | Updated: 2026-04-25 13:32 UTC*
+*Generated: 2026-04-25 | Updated: 2026-04-27 18:30 UTC*
 
 ## Build Status
 
@@ -45,19 +45,28 @@
 
 ## 🚨 Top 3 CTO-Level Priorities
 
-### 1. [HIGH] AI Agent Phase 3 — LLM Integration
-**Why it matters:** The AI Agent system (Phase 2) is architecturally complete with 9 REST endpoints and 4 dispatcher tools, but all natural language generation uses template-based placeholders (`// TODO: LLM` markers).
+### 1. [DONE] AI Agent Phase 3 — LLM Integration ✅
 
-**What's needed:**
-- Wire `Anthropic` API into `AiDmService` (already has SDK imported) for `generateNote` tool
-- Add `ANTHROPIC_API_KEY` to environment config
-- Extend `toolGenerateNote()` and `SummaryAgent` to call real LLM with contact context
-- Add `generateNote` streaming variant for real-time UX
+**Status:** COMPLETE (2026-04-27 20:35 UTC) — All code migrated from `@anthropic-ai/sdk` → `LlmService` (OpenRouter).
 
-**Impact:** This transforms SOCOS from "gamified CRM" to "AI-powered relationship assistant" — the core differentiator vs Monica/Twenty.
+**What was done:**
+- Created shared `LlmService` (`llm/llm.service.ts`) with OpenRouter OpenAI-compatible API
+- Migrated `AiAgentService` (all 4 tools) from raw Anthropic SDK → `LlmService.complete()`
+- Migrated `AiDmService.callAI()` from Anthropic SDK → `LlmService.complete()`
+- Migrated `SummaryAgent` (both summary methods) from Anthropic SDK → `LlmService.complete()`
+- Removed unused `@anthropic-ai/sdk` and `anthropic` npm dependencies
+- Updated `.env.example` with `OPENROUTER_API_KEY` and `OPENROUTER_MODEL`
+- Created `PHASE3_LLM_IMPLEMENTATION.md` with full documentation
+- All services gracefully fall back to template/algorithmic/mock responses when no API key is set
 
+**What's needed to activate:**
+```bash
+# In services/api/.env:
+OPENROUTER_API_KEY=sk-or-v1-...
+```
+Get a key at https://openrouter.ai/keys. No code changes required.
 
-**Status update (2026-04-27):** AI agent architecture is now documented in ARCHITECTURE.md Section 6. Two parallel systems exist (legacy `agents/` + new `ai-agent/` dispatcher). Both need LLM integration to become truly intelligent.
+**Impact:** SOCOS is now "AI-powered relationship assistant" — the core differentiator vs Monica/Twenty. Just needs the API key to go live.
 
 ---
 
@@ -104,9 +113,10 @@
 - Swagger docs at `/api`
 - Health check endpoint at `/api/health/check`
 - Unit tests (dungeon-master) + Playwright e2e (web)
+- **AI Agent Phase 3**: Full OpenRouter LLM integration (4 tools + DM + summaries) — just needs API key
 
 ### ❌ Broken / Missing
-- AI Agent system (referenced but not implemented)
+- ~~AI Agent system (referenced but not implemented)~~ ✅ DONE
 - Email/SMS notification sending
 - Login/signup UI in frontend
 - JWT token storage/usage in frontend
@@ -123,7 +133,7 @@
 
 
 - `@socos/platform` (React + Vite) is **still boilerplate** — `App.tsx` renders "Welcome to ts-monorepo-boilerplate" with a logo and shared message. No SOCOS-specific features implemented.
-- `AiDmService.callAI()` is explicitly **stub-only (Phase 3)**. Prompt-building logic exists but the actual LLM call returns mock JSON. Real Anthropic integration planned for Phase 3.
+- `AiDmService.callAI()` now uses `LlmService.complete()` via OpenRouter (not Anthropic SDK). Falls back to mock only when OPENROUTER_API_KEY is unset.
 - `@socos/web` has a **landing page** (`/`) + dashboard (`/dashboard`) + auth pages (`/auth/login`, `/auth/signup`) + health-check/setup-db routes.
 - Database connection string is hardcoded in `docker-compose.prod.yml`: `postgresql://postgres:37BLEWztnVO7AqI8bQb9vUrCnnBif8uaThihxv4K9R7Nsa7AiRiywB4K1Ob2nZIi@zwkk0scogckskkwss8oo48k4:5432/socos?sslmode=disable`
 - Three docker-compose files exist: `docker-compose.yaml` (default), `docker-compose.local.yml`, `docker-compose.prod.yml`

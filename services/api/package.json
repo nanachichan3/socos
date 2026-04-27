@@ -30,7 +30,6 @@
     "clean": "rm -rf dist node_modules .turbo"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.91.1",
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.1.17",
@@ -39,7 +38,6 @@
     "@prisma/client": "^6.9.0",
     "@socos/agent-core": "workspace:*",
     "@socos/shared": "workspace:*",
-    "anthropic": "^0.0.0",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.0",
