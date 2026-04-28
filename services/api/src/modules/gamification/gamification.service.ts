@@ -6,6 +6,207 @@ import { InteractionType } from '../interactions/interactions.dto.js';
 export class GamificationService {
   constructor(private prisma: PrismaService) {}
 
+  // ── Streak Logic ──────────────────────────────────────────────────────
+
+  /**
+   * Record a daily check-in for the user.
+   * Rules:
+   * - First check-in ever → streak = 1
+   * - Already checked in today → no change
+   * - Checked in yesterday → streak + 1
+   * - Missed 1+ days → streak reset to 1
+   *
+   * Awards bonus XP on milestone days.
+   */
+  async checkIn(userId: string): Promise<{
+    streakDays: number;
+    checkedInToday: boolean;
+    streakBroken: boolean;
+    xpAwarded: number;
+    newAchievements: string[];
+  }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { streakDays: true, lastActiveAt: true },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const lastActive = user.lastActiveAt
+      ? new Date(
+          user.lastActiveAt.getFullYear(),
+          user.lastActiveAt.getMonth(),
+          user.lastActiveAt.getDate(),
+        )
+      : null;
+
+    // Already checked in today
+    if (lastActive && lastActive.getTime() === today.getTime()) {
+      return {
+        streakDays: user.streakDays,
+        checkedInToday: true,
+        streakBroken: false,
+        xpAwarded: 0,
+        newAchievements: [],
+      };
+    }
+
+    let newStreak = 1;
+    let streakBroken = false;
+
+    if (!lastActive) {
+      newStreak = 1;
+    } else if (lastActive.getTime() === yesterday.getTime()) {
+      newStreak = user.streakDays + 1;
+    } else if (lastActive.getTime() < yesterday.getTime()) {
+      newStreak = 1;
+      streakBroken = true;
+    }
+
+    // XP award: base 5, +20 for 7-day streak, +50 for 30-day streak
+    let xpAwarded = 5;
+    if (newStreak >= 30) xpAwarded += 50;
+    else if (newStreak >= 7) xpAwarded += 20;
+    else if (newStreak >= 3) xpAwarded += 10;
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        streakDays: newStreak,
+        lastActiveAt: now,
+        xp: { increment: xpAwarded },
+      },
+    });
+
+    // Check for streak achievements
+    const newAchievements = await this.checkStreakAchievements(userId, newStreak);
+
+    return {
+      streakDays: newStreak,
+      checkedInToday: true,
+      streakBroken,
+      xpAwarded,
+      newAchievements,
+    };
+  }
+
+  /**
+   * Get current streak status for a user.
+   */
+  async getStreak(userId: string): Promise<{
+    streakDays: number;
+    lastActiveAt: Date | null;
+    checkedInToday: boolean;
+    checkedInYesterday: boolean;
+    streakAtRisk: boolean;
+  }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { streakDays: true, lastActiveAt: true },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const lastActive = user.lastActiveAt
+      ? new Date(
+          user.lastActiveAt.getFullYear(),
+          user.lastActiveAt.getMonth(),
+          user.lastActiveAt.getDate(),
+        )
+      : null;
+
+    const checkedInToday = lastActive ? lastActive.getTime() === today.getTime() : false;
+    const checkedInYesterday = lastActive ? lastActive.getTime() === yesterday.getTime() : false;
+    const streakAtRisk = user.streakDays > 0 && !checkedInToday && !checkedInYesterday;
+
+    return {
+      streakDays: user.streakDays,
+      lastActiveAt: user.lastActiveAt,
+      checkedInToday,
+      checkedInYesterday,
+      streakAtRisk,
+    };
+  }
+
+  /**
+   * Check and award streak-based achievements.
+   */
+  private async checkStreakAchievements(userId: string, streakDays: number): Promise<string[]> {
+    const newAchievements: string[] = [];
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        achievements: {
+          include: { achievement: true },
+        },
+      },
+    });
+
+    if (!user) return newAchievements;
+
+    const existingCodes = user.achievements
+      .map((ua) => ua.achievement?.code)
+      .filter((code): code is string => !!code);
+
+    const streakAchievements = [
+      { code: 'streak_starter', name: 'Streak Starter', target: 3 },
+      { code: 'streak_master', name: 'Streak Master', target: 7 },
+      { code: 'streak_legend', name: 'Streak Legend', target: 30 },
+    ];
+
+    for (const achievement of streakAchievements) {
+      if (existingCodes.includes(achievement.code)) continue;
+      if (streakDays < achievement.target) continue;
+
+      let dbAchievement = await this.prisma.achievement.findUnique({
+        where: { code: achievement.code },
+      });
+
+      if (!dbAchievement) {
+        dbAchievement = await this.prisma.achievement.create({
+          data: {
+            code: achievement.code,
+            name: achievement.name,
+            description: `Maintained a ${achievement.target}-day activity streak!`,
+            xpReward: achievement.target * 25,
+            requirement: JSON.stringify({ type: 'streak', target: achievement.target }),
+          },
+        });
+      }
+
+      await this.prisma.userAchievement.create({
+        data: {
+          userId,
+          achievementId: dbAchievement.id,
+        },
+      });
+
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { xp: { increment: dbAchievement.xpReward } },
+      });
+
+      newAchievements.push(dbAchievement.name);
+    }
+
+    return newAchievements;
+  }
+
   // XP rewards for different interaction types
   private readonly XP_REWARDS: Record<string, number> = {
     [InteractionType.CALL]: 10,

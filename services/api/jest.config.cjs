@@ -13,6 +13,7 @@ module.exports = {
   coverageDirectory: '../coverage',
   moduleNameMapper: {
     '^@ts-monorepo-boilerplate/common$': '<rootDir>/../../../packages/shared-package/src/index.ts',
-    '^@ts-monorepo-boilerplate/common/(.*)$': '<rootDir>/../../../packages/shared-package/src/$1'
+    '^@ts-monorepo-boilerplate/common/(.*)$': '<rootDir>/../../../packages/shared-package/src/$1',
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   }
 };

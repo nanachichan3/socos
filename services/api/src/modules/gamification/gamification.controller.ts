@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { GamificationService } from './gamification.service.js';
 import { AuthGuard } from '../auth/auth.guard.js';
@@ -26,5 +26,17 @@ export class GamificationController {
   @ApiOperation({ summary: 'Get user gamification stats for dashboard' })
   async getStats(@Request() req: { user: { userId: string } }) {
     return this.gamificationService.getStats(req.user.userId);
+  }
+
+  @Post('streak/check-in')
+  @ApiOperation({ summary: 'Record daily check-in and update streak' })
+  async checkIn(@Request() req: { user: { userId: string } }) {
+    return this.gamificationService.checkIn(req.user.userId);
+  }
+
+  @Get('streak')
+  @ApiOperation({ summary: 'Get current streak status' })
+  async getStreak(@Request() req: { user: { userId: string } }) {
+    return this.gamificationService.getStreak(req.user.userId);
   }
 }
