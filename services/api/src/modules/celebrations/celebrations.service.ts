@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { toGregorian } from "lunar";
 import { PrismaService } from '../prisma/prisma.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import {
   CreateCelebrationPackDto,
   UpdateCelebrationPackDto,
@@ -49,7 +50,10 @@ function getGregorianDateForCelebration(celebration: { date: string; fullDate: D
 
 @Injectable()
 export class CelebrationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
 
   // ==================== SEARCH ====================
 
@@ -144,6 +148,38 @@ export class CelebrationsService {
     }
 
     return reminders.sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 50);
+  }
+
+  /**
+   * Send email/SMS notifications for upcoming celebration reminders.
+   * Returns a summary of notifications sent.
+   */
+  async sendCelebrationNotifications(userId: string, days = 14): Promise<{
+    sent: number;
+    errors: number;
+    details: Array<{ contactName: string; celebrationName: string; sent: boolean; error?: string }>;
+  }> {
+    const upcoming = await this.getReminderCelebrations(userId, days);
+    const details: Array<{ contactName: string; celebrationName: string; sent: boolean; error?: string }> = [];
+    let sent = 0;
+    let errors = 0;
+
+    for (const item of upcoming) {
+      try {
+        await this.notifications.sendCelebrationNotification(userId, {
+          contactName: item.contactName,
+          celebrationName: item.celebrationName,
+          reminderDate: item.nextOccurrence.toLocaleDateString(),
+        });
+        sent++;
+        details.push({ contactName: item.contactName, celebrationName: item.celebrationName, sent: true });
+      } catch (err) {
+        errors++;
+        details.push({ contactName: item.contactName, celebrationName: item.celebrationName, sent: false, error: String(err) });
+      }
+    }
+
+    return { sent, errors, details };
   }
 
   private buildReminderItem(cc: any, occDate: Date, year: number, now: Date) {

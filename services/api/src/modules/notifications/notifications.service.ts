@@ -197,6 +197,77 @@ export class NotificationsService {
   }
 
   /**
+   * Send a celebration reminder notification (email + SMS)
+   */
+  async sendCelebrationNotification(
+    userId: string,
+    celebration: {
+      contactName: string;
+      celebrationName: string;
+      reminderDate?: string;
+    },
+  ): Promise<{ results: NotificationResult[] }> {
+    const results: NotificationResult[] = [];
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, name: true },
+    });
+
+    if (!user) {
+      return { results: [{ success: false, error: 'User not found', provider: 'system', sentAt: new Date() }] };
+    }
+
+    const template = NOTIFICATION_TEMPLATES.celebration;
+    const templateData: NotificationTemplateData = {
+      userName: user.name || 'there',
+      contactName: celebration.contactName,
+      reminderDate: celebration.reminderDate,
+      ctaUrl: this.configService.get('APP_URL') || 'https://socos.app',
+      ctaText: 'Open SOCOS',
+    };
+
+    const subject = this.renderTemplate(template.subject, templateData);
+    const emailHtml = this.renderTemplate(template.emailTemplate, templateData);
+    const smsText = this.renderTemplate(template.smsTemplate, templateData);
+
+    if (user.email) {
+      const emailResult = await this.emailProvider.send({
+        to: user.email,
+        subject,
+        html: emailHtml,
+      });
+      results.push(emailResult);
+    }
+
+    const phoneResult = await this.getUserPhoneAndSend(userId, smsText);
+    if (phoneResult) results.push(phoneResult);
+
+    return { results };
+  }
+
+  /**
+   * Send gamification achievement notification (alias for sendAchievementNotification)
+   */
+  async sendGamificationAchievement(
+    userId: string,
+    achievement: { name: string; description: string; xpReward: number },
+  ): Promise<{ results: NotificationResult[] }> {
+    return this.sendAchievementNotification(userId, achievement);
+  }
+
+  /**
+   * Send level-up notification (alias for sendLevelUpNotification)
+   */
+  async sendGamificationLevelUp(
+    userId: string,
+    level: number,
+    levelName: string,
+  ): Promise<{ results: NotificationResult[] }> {
+    return this.sendLevelUpNotification(userId, level, levelName);
+  }
+
+  /**
    * Send a custom message to a contact via email
    */
   async sendEmailToContact(

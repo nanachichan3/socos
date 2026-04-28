@@ -52,6 +52,12 @@ export class CelebrationsController {
     return this.celebrationsService.getReminderCelebrations(req.user.userId, days || 14);
   }
 
+  @Post('notify-upcoming')
+  @ApiOperation({ summary: 'Send notifications for upcoming celebrations' })
+  async notifyUpcoming(@Request() req: { user: { userId: string } }, @Query('days') days?: number) {
+    return this.celebrationsService.sendCelebrationNotifications(req.user.userId, days || 14);
+  }
+
   @Get('packs/:packId')
   @ApiOperation({ summary: 'Get a celebration pack by ID' })
   async findPackById(

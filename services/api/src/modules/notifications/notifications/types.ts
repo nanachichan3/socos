@@ -68,7 +68,7 @@ export interface NotificationTemplateData {
 export const NOTIFICATION_TEMPLATES = {
   // Reminder notifications
   birthday: {
-    subject: '🎂 {contactName}\'s birthday is coming up!',
+    subject: "🎂 {{contactName}}'s birthday is coming up!",
     emailTemplate: `
       <h2>Birthday Reminder</h2>
       <p>Hi {{userName}},</p>
@@ -78,10 +78,10 @@ export const NOTIFICATION_TEMPLATES = {
         <a href="{{ctaUrl}}">{{ctaText}}</a>
       {{/if}}
     `,
-    smsTemplate: '🎂 {contactName}\'s birthday is coming up on {reminderDate}!',
+    smsTemplate: "🎂 {{contactName}}'s birthday is coming up on {{reminderDate}}!",
   },
   anniversary: {
-    subject: '💕 {contactName}\'s anniversary is coming up!',
+    subject: "💕 {{contactName}}'s anniversary is coming up!",
     emailTemplate: `
       <h2>Anniversary Reminder</h2>
       <p>Hi {{userName}},</p>
@@ -90,10 +90,10 @@ export const NOTIFICATION_TEMPLATES = {
         <a href="{{ctaUrl}}">{{ctaText}}</a>
       {{/if}}
     `,
-    smsTemplate: '💕 {contactName}\'s anniversary is coming up on {reminderDate}!',
+    smsTemplate: "💕 {{contactName}}'s anniversary is coming up on {{reminderDate}}!",
   },
   followup: {
-    subject: '📝 Follow up with {contactName}',
+    subject: '📝 Follow up with {{contactName}}',
     emailTemplate: `
       <h2>Follow-up Reminder</h2>
       <p>Hi {{userName}},</p>
@@ -105,10 +105,10 @@ export const NOTIFICATION_TEMPLATES = {
         <a href="{{ctaUrl}}">{{ctaText}}</a>
       {{/if}}
     `,
-    smsTemplate: '📝 Time to check in with {contactName}!',
+    smsTemplate: '📝 Time to check in with {{contactName}}!',
   },
   stale: {
-    subject: '👋 It\'s been a while since you connected with {contactName}',
+    subject: "👋 It's been a while since you connected with {{contactName}}",
     emailTemplate: `
       <h2>Relationship Check-in</h2>
       <p>Hi {{userName}},</p>
@@ -118,10 +118,10 @@ export const NOTIFICATION_TEMPLATES = {
         <a href="{{ctaUrl}}">{{ctaText}}</a>
       {{/if}}
     `,
-    smsTemplate: '👋 It\'s been a while! Time for a check-in with {contactName}.',
+    smsTemplate: "👋 It's been a while! Time for a check-in with {{contactName}}.",
   },
   celebration: {
-    subject: '🎉 {contactName}\'s celebration is coming up!',
+    subject: "🎉 {{contactName}}'s celebration is coming up!",
     emailTemplate: `
       <h2>Celebration Reminder</h2>
       <p>Hi {{userName}},</p>
@@ -131,12 +131,12 @@ export const NOTIFICATION_TEMPLATES = {
         <a href="{{ctaUrl}}">{{ctaText}}</a>
       {{/if}}
     `,
-    smsTemplate: '🎉 {contactName}\'s celebration is coming up on {reminderDate}!',
+    smsTemplate: "🎉 {{contactName}}'s celebration is coming up on {{reminderDate}}!",
   },
 
   // Achievement notifications
   achievement: {
-    subject: '🏆 Achievement Unlocked: {achievementName}!',
+    subject: '🏆 Achievement Unlocked: {{achievementName}}!',
     emailTemplate: `
       <h2>🏆 Achievement Unlocked!</h2>
       <p>Congratulations {{userName}}!</p>
@@ -144,18 +144,18 @@ export const NOTIFICATION_TEMPLATES = {
       <p>{{achievementDescription}}</p>
       <p>+{{xpEarned}} XP earned!</p>
     `,
-    smsTemplate: '🏆 Achievement unlocked: {achievementName}! +{xpEarned} XP',
+    smsTemplate: '🏆 Achievement unlocked: {{achievementName}}! +{{xpEarned}} XP',
   },
 
   // Level up notifications
   levelUp: {
-    subject: '🎉 You\'ve reached Level {level}!',
+    subject: "🎉 You've reached Level {{level}}!",
     emailTemplate: `
       <h2>🎉 Level Up!</h2>
       <p>Congratulations {{userName}}!</p>
       <p>You've reached <strong>Level {{level}}</strong> - {{levelName}}!</p>
       <p>Keep up the great work building your relationships!</p>
     `,
-    smsTemplate: '🎉 Level up! You\'re now Level {level} - {levelName}!',
+    smsTemplate: "🎉 Level up! You're now Level {{level}} - {{levelName}}!",
   },
 } as const;

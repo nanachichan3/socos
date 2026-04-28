@@ -1,5 +1,6 @@
 import { GamificationService } from '../gamification.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../../notifications/notifications.service.js';
 
 // Mock PrismaService
 const mockPrisma = {
@@ -18,11 +19,17 @@ const mockPrisma = {
   },
 } as unknown as PrismaService;
 
+// Mock NotificationsService
+const mockNotifications = {
+  sendGamificationAchievement: jest.fn().mockResolvedValue({ results: [] }),
+  sendGamificationLevelUp: jest.fn().mockResolvedValue({ results: [] }),
+} as unknown as NotificationsService;
+
 describe('GamificationService — Streak Tracking', () => {
   let service: GamificationService;
 
   beforeEach(() => {
-    service = new GamificationService(mockPrisma);
+    service = new GamificationService(mockPrisma, mockNotifications);
     jest.clearAllMocks();
   });
 

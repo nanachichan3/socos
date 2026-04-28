@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { InteractionType } from '../interactions/interactions.dto.js';
 
 @Injectable()
 export class GamificationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
 
   // ── Streak Logic ──────────────────────────────────────────────────────
 
@@ -201,6 +205,15 @@ export class GamificationService {
         data: { xp: { increment: dbAchievement.xpReward } },
       });
 
+      // Send achievement notification
+      this.notifications.sendGamificationAchievement(userId, {
+        name: dbAchievement.name,
+        description: dbAchievement.description,
+        xpReward: dbAchievement.xpReward,
+      }).catch((err) =>
+        console.error('Failed to send achievement notification:', err),
+      );
+
       newAchievements.push(dbAchievement.name);
     }
 
@@ -221,11 +234,18 @@ export class GamificationService {
     return this.XP_REWARDS[type] || 10;
   }
 
-  async checkLevelUp(userId: string, totalXp: number): Promise<{ newLevel: number; xpForNextLevel: number; leveledUp: boolean }> {
+  async checkLevelUp(userId: string, totalXp: number): Promise<{ newLevel: number; xpForNextLevel: number; leveledUp: boolean; previousLevel: number }> {
     // Simple level formula: level = floor(sqrt(xp / 100)) + 1
     const newLevel = Math.floor(Math.sqrt(totalXp / 100)) + 1;
     const xpForNextLevel = Math.pow(newLevel, 2) * 100;
-    const leveledUp = false; // Could track previous level to detect level up
+
+    // Get previous level to detect actual level-up
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { level: true },
+    });
+    const previousLevel = user?.level ?? 1;
+    const leveledUp = newLevel > previousLevel;
 
     // Update user's level
     await this.prisma.user.update({
@@ -233,7 +253,15 @@ export class GamificationService {
       data: { level: newLevel },
     });
 
-    return { newLevel, xpForNextLevel, leveledUp };
+    // Send level-up notification if user actually leveled up
+    if (leveledUp) {
+      const levelName = this.getLevelName(newLevel);
+      this.notifications.sendGamificationLevelUp(userId, newLevel, levelName).catch((err) =>
+        console.error('Failed to send level-up notification:', err),
+      );
+    }
+
+    return { newLevel, xpForNextLevel, leveledUp, previousLevel };
   }
 
   async checkAchievements(userId: string): Promise<string[]> {
@@ -308,6 +336,15 @@ export class GamificationService {
           where: { id: userId },
           data: { xp: { increment: dbAchievement.xpReward } },
         });
+
+        // Send achievement notification
+        this.notifications.sendGamificationAchievement(userId, {
+          name: dbAchievement.name,
+          description: dbAchievement.description,
+          xpReward: dbAchievement.xpReward,
+        }).catch((err) =>
+          console.error('Failed to send achievement notification:', err),
+        );
 
         newAchievements.push(dbAchievement.name);
       }
