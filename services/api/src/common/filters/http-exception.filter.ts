@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import * as Sentry from '@sentry/node';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -42,6 +43,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = process.env.NODE_ENV === 'production'
         ? 'Internal server error'
         : exception.message;
+    }
+
+    // Report non-HTTP exceptions to Sentry
+    if (!(exception instanceof HttpException) && exception instanceof Error) {
+      Sentry.captureException(exception, {
+        contexts: {
+          request: {
+            method: request.method,
+            url: request.url,
+            headers: request.headers,
+          },
+        },
+      });
     }
 
     response.status(status).json({

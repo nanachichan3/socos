@@ -1,9 +1,20 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import * as Sentry from '@sentry/node';
 import { AppModule } from './app.module.js';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
 import { PrismaClient } from '@prisma/client';
+
+// Initialize Sentry before anything else
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.NODE_ENV || 'development',
+  tracesSampleRate: 0.1,
+  // Don't fail if DSN is not set — allow graceful no-op
+  enabled: Boolean(process.env.SENTRY_DSN),
+  debug: false,
+});
 
 async function ensureDatabase() {
   // Connect to the default 'postgres' database to create 'socos' if missing.
@@ -63,7 +74,10 @@ async function bootstrap() {
   );
 
   // Global exception filter — ensures HTTP exceptions return correct status codes (401, etc.)
+  // Also reports errors to Sentry
   app.useGlobalFilters(new AllExceptionsFilter());
+
+
 
   // Enable CORS
   app.enableCors();

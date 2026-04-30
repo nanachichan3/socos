@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { HealthController } from './health/health.controller.js';
 import { PrismaService } from './modules/prisma/prisma.service.js';
 import { JwtService } from './modules/jwt/jwt.service.js';
@@ -32,6 +33,7 @@ import { EnrichmentAgent } from './modules/agents/strategies/enrichment-agent.js
 import { SummaryAgent } from './modules/agents/strategies/summary-agent.js';
 import { SuggestionAgent } from './modules/agents/strategies/suggestion-agent.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
+import { NotificationSchedulerModule } from './modules/notifications/notification-scheduler.module.js';
 import { NotificationsController } from './modules/notifications/notifications.controller.js';
 import { NotificationsService } from './modules/notifications/notifications.service.js';
 import { ResendEmailProvider } from './modules/notifications/providers/resend.provider.js';
@@ -40,8 +42,10 @@ import { TwilioSmsProvider } from './modules/notifications/providers/twilio.prov
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     AgentsModule,
     NotificationsModule,
+    NotificationSchedulerModule,
     AiAgentModule,
     RemindersModule,
     AgentToolsModule,

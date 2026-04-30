@@ -25,7 +25,7 @@ services:
     networks:
       - coolify
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"const http=require('http');http.get('http://localhost:3000/api/health-check',(r)=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))\""]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health-check || node -e \"const http=require('http');http.get('http://localhost:3000/api/health-check',(r)=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -36,6 +36,15 @@ services:
     build:
       context: .
       dockerfile: services/api/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health/check || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:37BLEWztnVO7AqI8bQb9vUrCnnBif8uaThihxv4K9R7Nsa7AiRiywB4K1Ob2nZIi@zwkk0scogckskkwss8oo48k4:5432/socos?sslmode=disable
@@ -53,6 +62,22 @@ services:
       - "traefik.http.routers.api-swwcg80gkw4k0k4oco8w8wgw-https.tls=true"
     expose:
       - "3001"
+    networks:
+      - coolify
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=37BLEWztnVO7AqI8bQb9vUrCnnBif8uaThihxv4K9R7Nsa7AiRiywB4K1Ob2nZIi
+      - POSTGRES_DB=socos
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - coolify
     restart: unless-stopped
