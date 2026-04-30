@@ -10,6 +10,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AnthropicService } from '../llm/anthropic.service.js';
 import { LlmService } from '../llm/llm.service.js';
 import { ScenePromptContext } from './dungeon-master.dto.js';
 
@@ -23,10 +24,16 @@ const ARCHETYPE_PERSONAS: Record<Archetype, string> = {
 };
 
 export class AiDmService {
+  private readonly anthropic: AnthropicService;
   private readonly llm: LlmService;
 
-  constructor(private readonly configService: ConfigService) {
-    this.llm = new LlmService(configService);
+  constructor(
+    private readonly configService: ConfigService,
+    anthropicService: AnthropicService,
+    llmService: LlmService,
+  ) {
+    this.anthropic = anthropicService;
+    this.llm = llmService;
   }
 
   /**
@@ -126,24 +133,36 @@ Guidelines:
   }
 
   /**
-   * Call the LLM via OpenRouter to generate narration.
-   * Falls back to mock responses when OPENROUTER_API_KEY is not configured.
+   * Call the LLM via Anthropic to generate narration.
+   * Falls back to mock responses when ANTHROPIC_API_KEY is not configured.
    *
    * Returns the raw text response from the AI.
    */
   async callAI(prompt: string): Promise<string> {
-    if (!this.llm.isConfigured) {
-      console.log('[AiDmService] callAI called (stub mode — no OPENROUTER_API_KEY). Prompt length:', prompt.length);
-      return this.mockCallAI(prompt);
+    // Try Anthropic first (direct), then fall back to OpenRouter
+    if (this.anthropic.isConfigured) {
+      try {
+        const result = await this.anthropic.complete(prompt, { maxTokens: 1024 });
+        if (result) {
+          return result;
+        }
+      } catch (error) {
+        console.error('[AiDmService] Anthropic API error:', error instanceof Error ? error.message : error);
+      }
     }
 
-    try {
-      const result = await this.llm.complete(prompt, { maxTokens: 1024 });
-      return result ?? '';
-    } catch (error) {
-      console.error('[AiDmService] LLM API error:', error instanceof Error ? error.message : error);
-      return this.mockCallAI(prompt);
+    // Fall back to OpenRouter
+    if (this.llm.isConfigured) {
+      try {
+        const result = await this.llm.complete(prompt, { maxTokens: 1024 });
+        return result ?? '';
+      } catch (error) {
+        console.error('[AiDmService] OpenRouter LLM API error:', error instanceof Error ? error.message : error);
+      }
     }
+
+    console.log('[AiDmService] callAI called (stub mode — no ANTHROPIC_API_KEY or OPENROUTER_API_KEY). Prompt length:', prompt.length);
+    return this.mockCallAI(prompt);
   }
 
   /**

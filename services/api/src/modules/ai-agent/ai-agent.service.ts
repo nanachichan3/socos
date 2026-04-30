@@ -9,6 +9,7 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../prisma/prisma.service.js";
 import { JwtService } from "../jwt/jwt.service.js";
+import { AnthropicService } from "../llm/anthropic.service.js";
 import { LlmService } from "../llm/llm.service.js";
 import {
   AiAgentAction,
@@ -31,19 +32,47 @@ export interface AgentContext {
 
 @Injectable()
 export class AiAgentService {
+  private readonly anthropic: AnthropicService;
+  private readonly llm: LlmService;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+    anthropicService: AnthropicService,
+    llmService: LlmService,
+  ) {
+    this.anthropic = anthropicService;
+    this.llm = llmService;
+  }
 
   /**
-   * Call LLM via OpenRouter with a prompt.
-   * Falls back to null response when OPENROUTER_API_KEY is not configured.
+   * Call LLM via Anthropic (direct), falling back to OpenRouter.
+   * Returns null when no API key is configured.
    */
   private async callLlm(prompt: string, maxTokens = 512): Promise<string | null> {
-    const llm = new LlmService(this.configService);
-    return llm.complete(prompt, { maxTokens });
+    // Try Anthropic first (direct), then fall back to OpenRouter
+    if (this.anthropic.isConfigured) {
+      try {
+        const result = await this.anthropic.complete(prompt, { maxTokens });
+        if (result) return result;
+      } catch (error) {
+        console.error('[AiAgentService] Anthropic error:', error instanceof Error ? error.message : error);
+      }
+    }
+
+    // Fall back to OpenRouter
+    if (this.llm.isConfigured) {
+      try {
+        const result = await this.llm.complete(prompt, { maxTokens });
+        return result;
+      } catch (error) {
+        console.error('[AiAgentService] OpenRouter error:', error instanceof Error ? error.message : error);
+      }
+    }
+
+    console.log('[AiAgentService] callLlm called but no API key configured');
+    return null;
   }
 
   async dispatch(
@@ -369,14 +398,15 @@ ${format === 'email' ? 'Start with a Subject: line, then the body.' : ''}
 ${format === 'meeting' ? 'Include talking points as a JSON array of strings.' : ''}
 Do NOT use generic templates — make it specific to this person and context.`;
 
-    const llm = new LlmService(this.configService);
+    // Use injected anthropic service (direct), fall back to injected llm (OpenRouter)
+    const activeLlm = this.anthropic.isConfigured ? this.anthropic : (this.llm.isConfigured ? this.llm : null);
     let content = '';
     let subject: string | undefined;
     let talkingPoints: string[] | undefined;
 
-    if (llm.isConfigured) {
+    if (activeLlm) {
       try {
-        const raw = await llm.complete(prompt, { maxTokens: 1024 });
+        const raw = await activeLlm.complete(prompt, { maxTokens: 1024 });
         if (raw) {
           if (format === 'email') {
             const subjectMatch = raw.match(/^Subject:\s*(.+)$/m);
