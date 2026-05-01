@@ -95,6 +95,101 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Solo-Consultants High-Conversion Section */}
+      <section className="py-20 px-8 bg-[#060e20] relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(78,222,163,0.04)_0%,rgba(11,19,38,0)_70%)]" />
+        <div className="max-w-7xl mx-auto relative">
+          {/* Header */}
+          <div className="text-center mb-14">
+            <span className="inline-block text-xs font-extrabold tracking-widest text-[#4edea3] uppercase mb-4 px-4 py-1.5 bg-[#4edea3]/10 rounded-full">
+              Solo-Consultants
+            </span>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4" style={{ fontFamily: 'Manrope, sans-serif' }}>
+              Your clients don't forget.
+              <br />
+              <span className="text-[#4edea3]">Your system should.</span>
+            </h2>
+            <p className="text-[#c7c4d7] max-w-2xl mx-auto text-lg">
+              You're not losing clients because you don't care. You're losing them because you have no system that works as fast as you do. SOCOS fixes that.
+            </p>
+          </div>
+
+          {/* Pain → Solution Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14">
+            {[
+              {
+                pain: "You met 3 new clients this week. By Friday, you can't remember their dog's name.",
+                solve: "SOCOS auto-logs every interaction. Every detail. Every promise. Searchable in seconds.",
+                icon: "🧠",
+              },
+              {
+                pain: "Your follow-up system is a spreadsheet you check when you remember.",
+                solve: "SOCOS AI surfaces exactly who needs a touchpoint today — and drafts the message for you.",
+                icon: "🤖",
+              },
+              {
+                pain: "You're billing hourly but bleeding revenue on admin work.",
+                solve: "SOCOS handles contact maintenance automatically. You focus on the work that earns.",
+                icon: "⚡",
+              },
+            ].map(({ pain, solve, icon }, i) => (
+              <div key={i} className="bg-[#0b1326] border border-[#464554]/20 rounded-2xl p-7 hover:border-[#4edea3]/30 transition-all">
+                <div className="text-3xl mb-4">{icon}</div>
+                <p className="text-[#ffb4ab] text-sm font-medium mb-4 leading-relaxed">{pain}</p>
+                <p className="text-[#4edea3] text-sm font-semibold leading-relaxed">{solve}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Feature callouts for consultants */}
+          <div className="bg-[#131b2e] rounded-2xl border border-[#464554]/20 p-8 mb-10">
+            <h3 className="text-xl font-extrabold mb-6 text-center" style={{ fontFamily: 'Manrope' }}>
+              Built for the way you actually work
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { icon: "📊", label: "Revenue tracking", sub: "Log calls, meetings, deals" },
+                { icon: "🔗", label: "Client context", sub: "How you met, history at a glance" },
+                { icon: "📅", label: "Touchpoint reminders", sub: "Never miss a re-engagement" },
+                { icon: "📤", label: "Client updates", sub: "Auto-draft status check-ins" },
+              ].map(({ icon, label, sub }, i) => (
+                <div key={i} className="flex flex-col items-center text-center p-4 rounded-xl bg-[#0b1326] hover:bg-[#171f33] transition-colors">
+                  <div className="text-2xl mb-2">{icon}</div>
+                  <div className="text-sm font-bold text-[#c0c1ff] mb-1">{label}</div>
+                  <div className="text-xs text-[#908fa0]">{sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Stats bar */}
+          <div className="flex flex-wrap justify-center gap-8 md:gap-16 mb-10">
+            {[
+              { stat: "< 30s", label: "to log a client interaction" },
+              { stat: "3x", label: "more consistent follow-ups" },
+              { stat: "0", label: "spreadsheets required" },
+            ].map(({ stat, label }, i) => (
+              <div key={i} className="text-center">
+                <div className="text-3xl font-extrabold text-[#4edea3] mb-1" style={{ fontFamily: 'Manrope' }}>{stat}</div>
+                <div className="text-xs text-[#908fa0] uppercase tracking-widest font-semibold">{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <p className="text-[#c7c4d7] mb-6 text-base">
+              Stop losing deals to bad memory. Your pipeline deserves a real system.
+            </p>
+            <Link href="/dashboard">
+              <button className="bg-gradient-to-r from-[#4edea3] to-[#3bc98a] text-[#0b1326] px-10 py-4 rounded-xl font-extrabold text-base shadow-lg shadow-[#4edea3]/20 hover:brightness-110 transition-all">
+                Get Started Free — No Credit Card
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Features Bento Grid */}
       <section id="features" className="py-24 px-8 bg-[#060e20]">
         <div className="max-w-7xl mx-auto">
