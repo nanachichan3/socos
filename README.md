@@ -13,6 +13,14 @@
 
 ---
 
+## Try It Out
+
+![SOCOS Dashboard](docs/socos-dashboard.png)
+
+_A glimpse of the SOCOS dashboard — contact list, gamification stats, and relationship tracking all in one place._
+
+---
+
 ## The Hook
 
 You meet someone great. You mean to stay in touch. Three months later you realize you have no idea what happened to them.
