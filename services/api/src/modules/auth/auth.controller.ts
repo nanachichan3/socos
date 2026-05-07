@@ -1,7 +1,8 @@
-import { Controller, Post, Body, Logger, HttpCode, HttpStatus, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Post, Body, Logger, HttpCode, HttpStatus, Get, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service.js';
 import { LoginDto, RegisterDto } from './auth.dto.js';
+import { AuthGuard } from './auth.guard.js';
 import * as bcrypt from 'bcryptjs';
 
 @ApiTags('auth')
@@ -33,6 +34,8 @@ export class AuthController {
 
   // Debug: check what hash is stored for a user
   @Get('debug/hash')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async debugHash() {
     try {
