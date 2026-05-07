@@ -57,6 +57,11 @@ function auth(req: any, res: any, next: any) {
 // Health
 app.get('/health', (req, res) => res.json({ status: 'ok', service: 'SOCOS API' }));
 
+// API Health (for uptime monitoring / cron)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '0.1.0', service: 'SOCOS API' });
+});
+
 // Auth
 app.post('/auth/register', async (req, res) => {
   try {
